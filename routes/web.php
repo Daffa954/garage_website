@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\GarageController;
+use App\Http\Controllers\RentController;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\VehicleController;
 use Illuminate\Support\Facades\Route;
 
@@ -15,6 +17,13 @@ Route::get('/dashboard', function () {
 Route::middleware(['auth.session'])->group(function () {
     Route::get('/vehicles', [VehicleController::class, 'index'])
         ->name('vehicles.index');
+    Route::get('/rents', [RentController::class, 'index'])
+        ->name('rents.index');
+});
+
+Route::middleware(['auth.session', 'admin.only'])->group(function () {
+    Route::get('/admin/users', [UserController::class, 'index'])
+        ->name('admin.users.index');
 });
 
 // Route::middleware(['admin.only'])->group(function () {
@@ -45,5 +54,13 @@ Route::prefix('api')->group(function () {
 
     Route::prefix('garage')->controller(GarageController::class)->group(function () {
         Route::post('/', 'store')->name('api.garage.store');
+    });
+
+    Route::prefix('user')->middleware(['auth.session', 'admin.only'])->controller(UserController::class)->group(function () {
+        Route::patch('/{id}/verify', 'toggleVerify')->name('api.user.verify');
+    });
+
+    Route::prefix('rent')->middleware('auth.session')->controller(RentController::class)->group(function () {
+        Route::post('/', 'store')->name('api.rent.store');
     });
 });

@@ -9,7 +9,7 @@
         $isRenter = $role === 'user';
     @endphp
 
-    <div class="max-w-7xl mx-auto px-4 py-8" x-data="{ showCreateModal: false }">
+    <div class="max-w-7xl mx-auto px-4 py-8" x-data="{ showCreateModal: false, showRentModal: false, selectedGarage: null }">
         {{-- Page Header --}}
         <div class="flex items-center justify-between mb-8">
             <div>
@@ -93,10 +93,11 @@
 
                                 <td class="px-6 py-4 text-center">
                                     @if ($garage->status === 'available')
-                                        <a 
+                                        <button type="button"
+                                            @click="selectedGarage = {{ json_encode($garage) }}; showRentModal = true"
                                             class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition">
                                             Rent
-                                        </a>
+                                        </button>
                                     @else
                                         <span class="text-gray-400 text-sm">Unavailable</span>
                                     @endif
@@ -112,5 +113,8 @@
         @if ($isAdmin)
             <x-garage.create-modal />
         @endif
+
+        {{-- Rent Garage Modal --}}
+        <x-garage.rent-modal :vehicles="$vehicles" />
     </div>
 @endsection

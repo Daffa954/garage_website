@@ -24,12 +24,18 @@
                     </a>
                 @endif
 
+                @if ($isAdmin)
+                    <a href="{{ route('admin.users.index') }}" class="hover:text-indigo-600 transition">
+                        List Users
+                    </a>
+                @endif
+
                 @if ($isRenter)
-                    <a href="{{ route('vehicles.index') }}" class="hover:text-indigo-600 transition">
+                    <a href="{{ route('rents.index') }}" class="hover:text-indigo-600 transition">
                         My Rental
                     </a>
                 @else
-                    <a class="hover:text-indigo-600 transition">
+                    <a href="{{ route('rents.index') }}" class="hover:text-indigo-600 transition">
                         List Rentals
                     </a>
                 @endif

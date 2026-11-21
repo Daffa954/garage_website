@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Garage;
+use App\Models\Vehicle;
 use App\Services\GarageService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -15,22 +16,37 @@ class GarageController extends Controller
     ) {
     }
 
+    /**
+     * Display a listing of garages.
+     *
+     * @return \Illuminate\View\View
+     */
     public function index()
     {
         $role = session('user_role');
 
         $query = Garage::query();
 
-        // Renter hanya melihat garage yang tersedia.
-        if ($role === 'renter') {
+        // Renters only view available garages.
+        if ($role === 'renter' || $role === 'user') {
             $query->where('status', 'available');
         }
 
         $garages = $query->latest()->get();
 
-        return view('garage', compact('garages'));
+        $vehicles = session()->has('user_id')
+            ? Vehicle::where('owner_id', session('user_id'))->get()
+            : collect();
+
+        return view('garage', compact('garages', 'vehicles'));
     }
 
+    /**
+     * Store a newly created garage facility.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function store(Request $request)
     {
         $data = $request->validate([
@@ -59,7 +75,7 @@ class GarageController extends Controller
             ],
         ]);
 
-        // Harga kWh hanya berlaku untuk Electric Car.
+        // Electricity price per kWh only applies to Electric Car garages.
         if ($data['category'] !== 'Electric Car') {
             $data['price_kwh'] = null;
         } elseif ($data['price_kwh'] === null) {

@@ -10,6 +10,13 @@ use RuntimeException;
 class GarageService
 {
 
+    /**
+     * Create a new garage facility with an auto-generated unique code.
+     *
+     * @param array $data Validated garage data.
+     * @return Garage
+     * @throws RuntimeException If category is invalid or maximum capacity is reached.
+     */
     public function create(array $data): Garage
     {
         return DB::transaction(function () use ($data) {

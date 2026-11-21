@@ -20,7 +20,7 @@ class AdminOnly
 
         $user = User::find($userId);
 
-        if ($user->role !== "admin") {
+        if (!$user || $user->role !== "admin") {
             session()->invalidate();
             session()->regenerateToken();
             return redirect()->route('welcome')

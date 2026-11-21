@@ -68,10 +68,7 @@
                         You haven't registered any vehicles yet.
                     </p>
 
-                    <a href="{{ route('vehicles.create') }}"
-                        class="inline-block mt-5 px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition">
-                        Register Your First Vehicle
-                    </a>
+                   
                 </div>
             @else
                 <div class="overflow-x-auto">

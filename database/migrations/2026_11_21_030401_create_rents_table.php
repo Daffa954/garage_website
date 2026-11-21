@@ -13,12 +13,11 @@ return new class extends Migration {
         Schema::create('rents', function (Blueprint $table) {
             $table->id();
             $table->integer('total_day');
-            $table->enum('type', ['monthly', 'daily'])->default('daily');
             $table->date('start_date')->useCurrent();
             $table->date('end_date')->nullable();
+
             $table->bigInteger('total_price');
-            $table->text('url_payment_receipt');
-            $table->text('note');
+            $table->text('note')->nullable();
             // FK Section
             $table->foreignId('renter_id')->constrained('users')->restrictOnDelete();
             $table->foreignId('garage_id')->constrained('garages')->restrictOnDelete();

@@ -63,11 +63,15 @@ class VehicleService
     /**
      * Retrieve all vehicles owned by a specific user.
      *
-     * @param int $userId User ID.
+     * @param int|null $userId User ID.
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    public function getAllVehiclesByUserID(int $userId)
+    public function getAllVehiclesByUserID(?int $userId)
     {
+        if (!$userId) {
+            return collect();
+        }
+
         return Vehicle::where('owner_id', $userId)->get();
     }
 }

@@ -15,6 +15,12 @@ class VehicleController extends Controller
         protected VehicleService $vehicleService
     ) {
     }
+    /**
+     * Store a newly created vehicle record.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function store(Request $request)
     {
         $data = $request->validate([
@@ -32,6 +38,11 @@ class VehicleController extends Controller
         return redirect()->back()->with('success', 'Vehicle created successfully.');
     }
 
+    /**
+     * Display a listing of vehicles owned by the authenticated user.
+     *
+     * @return \Illuminate\View\View
+     */
     public function index()
     {
         $vehicles = $this->vehicleService->getAllVehiclesByUserID(

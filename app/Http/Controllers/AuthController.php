@@ -13,6 +13,12 @@ class AuthController extends Controller
     ) {
     }
 
+    /**
+     * Handle an incoming user login request.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function login(Request $request)
     {
         $data = $request->validate([
@@ -37,6 +43,12 @@ class AuthController extends Controller
             ->with('success', 'Login Successful!');
     }
 
+    /**
+     * Handle a new user registration request.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function register(Request $request)
     {
         $data = $request->validate([
@@ -53,9 +65,31 @@ class AuthController extends Controller
 
         return redirect()
             ->route('dashboard')
-            ->with('success', 'Registrasi berhasil!');
+            ->with('success', 'Registration successful!');
     }
 
+    /**
+     * Log the authenticated user out by clearing the session.
+     *
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function logout()
+    {
+        session()->flush();
+        session()->invalidate();
+        session()->regenerateToken();
+
+        return redirect()
+            ->route('welcome')
+            ->with('success', 'Logout Successful!');
+    }
+
+    /**
+     * Establish session data for the authenticated user.
+     *
+     * @param User $user
+     * @return void
+     */
     private function createSession(User $user): void
     {
         session()->regenerate();
@@ -67,15 +101,5 @@ class AuthController extends Controller
             'user_email' => $user->email,
             'user_phone' => $user->phone
         ]);
-    }
-
-    public function logout()
-    {
-        session()->invalidate();
-        session()->regenerateToken();
-
-        return redirect()
-            ->route('welcome')
-            ->with('success', 'Logout berhasil!');
     }
 }

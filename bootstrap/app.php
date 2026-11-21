@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\AdminOnly;
+use App\Http\Middleware\EnsureUserLoggedIn;
 use App\Http\Middleware\IsUserVerified;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -15,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
+            'auth.session' => EnsureUserLoggedIn::class,
             'verified.user' => IsUserVerified::class,
             'admin.only' => AdminOnly::class
         ]);

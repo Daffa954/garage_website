@@ -10,13 +10,17 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('rent_extensions', function (Blueprint $table) {
+        Schema::create('rent_details', function (Blueprint $table) {
             $table->id();
-            $table->date('old_end_date');
-            $table->date('new_end_date');
+            $table->enum('type', ['monthly', 'daily'])->default('daily');
+
+            $table->date('start_date');
+            $table->date('end_date');
             $table->integer("total_day");
-            $table->bigInteger("additional_cost");
-            $table->text('url_payment_receipt');
+
+            $table->bigInteger("total_price");
+
+            $table->boolean('is_extension')->default(false);
             $table->foreignId('rent_id')->constrained("rents")->restrictOnDelete();
             $table->timestamps();
         });
@@ -27,6 +31,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('rent_extensions');
+        Schema::dropIfExists('rent_details');
     }
 };

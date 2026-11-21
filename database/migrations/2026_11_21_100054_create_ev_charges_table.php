@@ -14,7 +14,7 @@ return new class extends Migration {
             $table->id();
             $table->decimal('current_battery', 5, 2);
             $table->bigInteger("price_charge");
-            $table->text('note');
+            $table->text('note')->nullable();
             $table->text('url_payment_receipt');
             $table->foreignId('rent_id')->constrained("rents")->restrictOnDelete();
             $table->timestamps();
