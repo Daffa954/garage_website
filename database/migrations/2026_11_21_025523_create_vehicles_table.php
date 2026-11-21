@@ -17,10 +17,12 @@ return new class extends Migration {
             // For electric vehicles, we can store the total kWh consumed
             $table->integer('total_kwh')->nullable();
             $table->string('image')->nullable();
-            $table->foreignId('category_id')
-                ->nullable()
-                ->constrained('categories')
-                ->nullOnDelete();
+            $table->enum('category', [
+                'Bike',
+                'Motor Cycle',
+                'Car',
+                'Electric Car',
+            ]);
             $table->foreignId('owner_id')->constrained('users')->restrictOnDelete();
             $table->timestamps();
         });

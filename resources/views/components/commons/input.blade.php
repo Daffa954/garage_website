@@ -6,6 +6,8 @@
     'required' => true,
     'min' => null,
     'max' => null,
+    'minlength' => null,
+    'maxlength' => null,
 ])
 
 <div class="mb-5">

@@ -16,9 +16,9 @@ return new class extends Migration {
             $table->enum('type', ['monthly', 'daily'])->default('daily');
             $table->date('start_date')->useCurrent();
             $table->date('end_date')->nullable();
-            $table->integer('price_rent');
-            $table->integer('price_charge_ev')->default(0);
+            $table->bigInteger('total_price');
             $table->text('url_payment_receipt');
+            $table->text('note');
             // FK Section
             $table->foreignId('renter_id')->constrained('users')->restrictOnDelete();
             $table->foreignId('garage_id')->constrained('garages')->restrictOnDelete();

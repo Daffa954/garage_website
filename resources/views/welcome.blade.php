@@ -72,7 +72,7 @@
 
                     <x-commons.input name="email" label="Email" type="email" placeholder="example@email.com" />
 
-                    <x-commons.input name="nik" label="NIK" placeholder="Enter your NIK" min="16" max="16" />
+                    <x-commons.input name="nik" label="NIK" placeholder="Enter your NIK" minLength="16" maxLength="16" />
 
                     <x-commons.input name="phone" label="Phone Number" type="tel"
                         placeholder="Enter your phone number" />

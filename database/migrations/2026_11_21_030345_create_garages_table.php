@@ -15,11 +15,14 @@ return new class extends Migration {
             $table->string('garage_code', 4)->unique();
             $table->string('name');
             // Only for garage EV car
-            $table->integer('price_kwh')->nullable();
-            $table->foreignId('category_id')
-                ->nullable()
-                ->constrained('categories')
-                ->nullOnDelete();
+            $table->bigInteger('price_kwh')->nullable();
+            $table->bigInteger('price');
+            $table->enum('category', [
+                'Bike',
+                'Motor Cycle',
+                'Car',
+                'Electric Car',
+            ]);
             $table->enum('status', ['available', 'used'])->default('available');
             $table->timestamps();
         });
