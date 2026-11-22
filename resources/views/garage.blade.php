@@ -47,7 +47,7 @@
                         <p class="text-gray-500 text-sm">Belum ada garasi yang tersedia.</p>
                     </div>
                 @else
-                    <x-commons.datatable :headers="[
+                    <x-commons.datatable :headers="array_values(array_filter([
                         ['label' => '#'],
                         ['label' => 'Kode Garasi'],
                         ['label' => 'Tipe Garasi'],
@@ -56,8 +56,8 @@
                         ['label' => 'Tarif Listrik/kWh'],
                         ['label' => 'Status'],
                         ['label' => 'Penyewa Saat Ini'],
-                        ['label' => 'Aksi', 'class' => 'text-center'],
-                    ]">
+                        !$isAdmin ? ['label' => 'Aksi', 'class' => 'text-center'] : null,
+                    ]))">
                         @foreach ($garages as $garage)
                             <tr class="hover:bg-gray-50 transition">
                                 <td class="px-6 py-4 text-gray-500">
@@ -102,13 +102,15 @@
                                     {{ $garage->status !== 'available' ? ($garage->activeRent?->renter?->name ?? '-') : '-' }}
                                 </td>
 
-                                <td class="px-6 py-4 text-center">
-                                    <button type="button"
-                                        @click="selectedGarage = {{ json_encode($garage) }}; showRentModal = true"
-                                        class="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition shadow-sm">
-                                        Sewa Garasi
-                                    </button>
-                                </td>
+                                @if (!$isAdmin)
+                                    <td class="px-6 py-4 text-center">
+                                        <button type="button"
+                                            @click="selectedGarage = {{ json_encode($garage) }}; showRentModal = true"
+                                            class="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition shadow-sm">
+                                            Sewa Garasi
+                                        </button>
+                                    </td>
+                                @endif
                             </tr>
                         @endforeach
                     </x-commons.datatable>
@@ -128,6 +130,8 @@
         @endif
 
         {{-- Rent Garage Modal --}}
-        <x-garage.rent-modal :vehicles="$vehicles" />
+        @if (!$isAdmin)
+            <x-garage.rent-modal :vehicles="$vehicles" />
+        @endif
     </div>
 @endsection

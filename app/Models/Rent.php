@@ -137,13 +137,13 @@ class Rent extends Model
         $remainingDays = (int) $startDate->diffInDays($endDate);
         $currentStartDate = $startDate->copy();
 
-        $daysInStartingMonth = $startDate->daysInMonth;
-        $dailyMax = $daysInStartingMonth - 1;
-
         while ($remainingDays > 0) {
+            $daysInCurrentMonth = $currentStartDate->daysInMonth;
+            $dailyMax = $daysInCurrentMonth - 1;
+
             if ($remainingDays > $dailyMax) {
                 $type = 'monthly';
-                $periodDays = $daysInStartingMonth;
+                $periodDays = $daysInCurrentMonth;
                 $totalPrice = 25 * $dailyPrice;
             } else {
                 $type = 'daily';

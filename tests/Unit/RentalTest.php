@@ -102,6 +102,21 @@ class RentalTest extends TestCase
         $this->assertEquals('monthly', $monthlyPeriods[0]['type']);
         $this->assertEquals(31, $monthlyPeriods[0]['total_day']);
         $this->assertEquals(2500000, $monthlyPeriods[0]['total_price']);
+
+        // 2 Months (Nov 22 to Jan 22 = 61 days: Nov 30 days + Dec 31 days)
+        // Should produce exactly 2 monthly periods without residual daily period
+        $rentTwoMonths = new Rent([
+            'start_date' => '2026-11-22',
+            'end_date' => '2027-01-22',
+        ]);
+        $twoMonthPeriods = $rentTwoMonths->calculatePeriods(100000);
+        $this->assertCount(2, $twoMonthPeriods);
+        $this->assertEquals('monthly', $twoMonthPeriods[0]['type']);
+        $this->assertEquals(30, $twoMonthPeriods[0]['total_day']);
+        $this->assertEquals(2500000, $twoMonthPeriods[0]['total_price']);
+        $this->assertEquals('monthly', $twoMonthPeriods[1]['type']);
+        $this->assertEquals(31, $twoMonthPeriods[1]['total_day']);
+        $this->assertEquals(2500000, $twoMonthPeriods[1]['total_price']);
     }
 
     /**
