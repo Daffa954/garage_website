@@ -40,9 +40,14 @@
             const today = '{{ date('Y-m-d') }}';
             return this.occupiedUntilDate || today;
         },
+        formatLocalYMD(d) {
+            const pad = n => String(n).padStart(2, '0');
+            return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+        },
         get calculatedEndDate() {
             const baseStr = this.startDate || this.minStartDate;
-            const d = new Date(baseStr + 'T00:00:00');
+            const parts = baseStr.split('-');
+            const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
             if (this.rentType === 'daily') {
                 const days = Math.min(30, Math.max(1, parseInt(this.dailyDays) || 1));
                 d.setDate(d.getDate() + days);
@@ -50,7 +55,7 @@
                 const months = Math.max(1, parseInt(this.monthlyMonths) || 1);
                 d.setMonth(d.getMonth() + months);
             }
-            return d.toISOString().split('T')[0];
+            return this.formatLocalYMD(d);
         },
         get totalDays() {
             const start = new Date((this.startDate || this.minStartDate) + 'T00:00:00');

@@ -29,9 +29,11 @@
         openExtend(rent) {
             this.selectedRent = rent;
             const rawEnd = (rent.end_date || '').split('T')[0];
-            const currentEnd = new Date(rawEnd);
+            const parts = rawEnd.split('-');
+            const currentEnd = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
             currentEnd.setDate(currentEnd.getDate() + 1);
-            this.minEndDate = currentEnd.toISOString().split('T')[0];
+            const pad = n => String(n).padStart(2, '0');
+            this.minEndDate = `${currentEnd.getFullYear()}-${pad(currentEnd.getMonth() + 1)}-${pad(currentEnd.getDate())}`;
             this.newEndDate = this.minEndDate;
             this.showExtendModal = true;
         },
