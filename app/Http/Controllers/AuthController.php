@@ -8,6 +8,11 @@ use App\Services\AuthService;
 
 class AuthController extends Controller
 {
+    /**
+     * AuthController constructor.
+     *
+     * @param AuthService $authService Service handling authentication and user verification operations.
+     */
     public function __construct(
         protected AuthService $authService
     ) {
@@ -16,8 +21,8 @@ class AuthController extends Controller
     /**
      * Handle an incoming user login request.
      *
-     * @param Request $request
-     * @return \Illuminate\Http\RedirectResponse
+     * @param Request $request Incoming HTTP request containing 'email' and 'password'.
+     * @return \Illuminate\Http\RedirectResponse Redirect response to garages index on success, or back with errors.
      */
     public function login(Request $request)
     {
@@ -46,8 +51,8 @@ class AuthController extends Controller
     /**
      * Handle a new user registration request.
      *
-     * @param Request $request
-     * @return \Illuminate\Http\RedirectResponse
+     * @param Request $request Incoming HTTP request containing user registration fields.
+     * @return \Illuminate\Http\RedirectResponse Redirect response to garages index with success flash.
      */
     public function register(Request $request)
     {
@@ -71,7 +76,7 @@ class AuthController extends Controller
     /**
      * Display a listing of registered users for admin verification.
      *
-     * @return \Illuminate\View\View
+     * @return \Illuminate\View\View Admin users verification view with metrics and user list.
      */
     public function users()
     {
@@ -81,10 +86,10 @@ class AuthController extends Controller
     }
 
     /**
-     * Toggle manual verification status for a user.
+     * Toggle manual verification status for a user (Admin only).
      *
-     * @param int $id
-     * @return \Illuminate\Http\RedirectResponse
+     * @param int $id Target User ID to verify or unverify.
+     * @return \Illuminate\Http\RedirectResponse Redirect back with success flash message.
      */
     public function toggleVerify(int $id)
     {
@@ -96,9 +101,9 @@ class AuthController extends Controller
     }
 
     /**
-     * Log the authenticated user out by clearing the session.
+     * Log the authenticated user out by clearing and regenerating the session.
      *
-     * @return \Illuminate\Http\RedirectResponse
+     * @return \Illuminate\Http\RedirectResponse Redirect response to welcome page.
      */
     public function logout()
     {
@@ -114,7 +119,7 @@ class AuthController extends Controller
     /**
      * Establish session data for the authenticated user.
      *
-     * @param User $user
+     * @param User $user Authenticated user model instance.
      * @return void
      */
     private function createSession(User $user): void

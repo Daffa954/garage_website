@@ -57,7 +57,6 @@ class GarageTest extends TestCase
     {
         $availableGarage = Garage::create([
             'garage_code' => 'C001',
-            'name' => 'Car Bay 1',
             'price' => 100000,
             'category' => 'Car',
             'status' => 'available',
@@ -65,7 +64,6 @@ class GarageTest extends TestCase
 
         $usedGarage = Garage::create([
             'garage_code' => 'C002',
-            'name' => 'Car Bay 2',
             'price' => 100000,
             'category' => 'Car',
             'status' => 'used',
@@ -79,7 +77,6 @@ class GarageTest extends TestCase
     {
         $garage = Garage::create([
             'garage_code' => 'C001',
-            'name' => 'Car Bay 1',
             'price' => 100000,
             'category' => 'Car',
             'status' => 'available',
@@ -95,7 +92,6 @@ class GarageTest extends TestCase
     {
         $garage = Garage::create([
             'garage_code' => 'C001',
-            'name' => 'Car Bay 1',
             'price' => 100000,
             'category' => 'Car',
             'status' => 'used',
@@ -112,7 +108,6 @@ class GarageTest extends TestCase
         $renter = $this->createRenter();
         $garage = Garage::create([
             'garage_code' => 'C001',
-            'name' => 'Car Bay 1',
             'price' => 100000,
             'category' => 'Car',
             'status' => 'used',
@@ -155,13 +150,11 @@ class GarageTest extends TestCase
     public function test_it_generates_code_with_prefix_S_for_bike_and_motorcycle(): void
     {
         $bike = $this->garageService->create([
-            'name' => 'Bike Spot 1',
             'price' => 20000,
             'category' => 'Bike',
         ]);
 
         $motorcycle = $this->garageService->create([
-            'name' => 'Motor Spot 2',
             'price' => 30000,
             'category' => 'Motor Cycle',
         ]);
@@ -173,7 +166,6 @@ class GarageTest extends TestCase
     public function test_it_generates_code_with_prefix_C_for_car(): void
     {
         $car = $this->garageService->create([
-            'name' => 'Car Space 1',
             'price' => 100000,
             'category' => 'Car',
         ]);
@@ -184,7 +176,6 @@ class GarageTest extends TestCase
     public function test_it_generates_code_with_prefix_E_for_electric_car(): void
     {
         $ev = $this->garageService->create([
-            'name' => 'EV Spot 1',
             'price' => 150000,
             'price_kwh' => 2500,
             'category' => 'Electric Car',
@@ -197,19 +188,16 @@ class GarageTest extends TestCase
     public function test_it_increments_code_number_sequentially_per_category(): void
     {
         $car1 = $this->garageService->create([
-            'name' => 'Car 1',
             'price' => 100000,
             'category' => 'Car',
         ]);
 
         $car2 = $this->garageService->create([
-            'name' => 'Car 2',
             'price' => 100000,
             'category' => 'Car',
         ]);
 
         $bike1 = $this->garageService->create([
-            'name' => 'Bike 1',
             'price' => 20000,
             'category' => 'Bike',
         ]);
@@ -225,7 +213,6 @@ class GarageTest extends TestCase
         $this->expectExceptionMessage('Invalid garage category.');
 
         $this->garageService->create([
-            'name' => 'Truck Spot',
             'price' => 200000,
             'category' => 'Truck',
         ]);
@@ -236,7 +223,6 @@ class GarageTest extends TestCase
         // Seed a garage with number 999
         Garage::create([
             'garage_code' => 'C999',
-            'name' => 'Car 999',
             'price' => 100000,
             'category' => 'Car',
             'status' => 'available',
@@ -246,7 +232,6 @@ class GarageTest extends TestCase
         $this->expectExceptionMessage('Maximum garage capacity reached.');
 
         $this->garageService->create([
-            'name' => 'Car 1000',
             'price' => 100000,
             'category' => 'Car',
         ]);
@@ -255,13 +240,47 @@ class GarageTest extends TestCase
     public function test_newly_created_garage_has_status_available(): void
     {
         $garage = $this->garageService->create([
-            'name' => 'Fresh Garage',
             'price' => 100000,
             'category' => 'Car',
         ]);
 
         $this->assertEquals('available', $garage->status);
         $this->assertTrue($garage->isAvailable());
+    }
+
+    public function test_admin_can_batch_create_garages(): void
+    {
+        $garages = $this->garageService->createBatch([
+            'category' => 'Car',
+            'price' => 100000,
+            'quantity' => 5,
+        ]);
+
+        $this->assertCount(5, $garages);
+        $this->assertEquals('C001', $garages[0]->garage_code);
+        $this->assertEquals('C005', $garages[4]->garage_code);
+    }
+
+    public function test_batch_creation_caps_to_remaining_capacity(): void
+    {
+        // Seed up to C998
+        Garage::create([
+            'garage_code' => 'C998',
+            'price' => 100000,
+            'category' => 'Car',
+            'status' => 'available',
+        ]);
+
+        // Request 2 garages, but only 1 slot (C999) is available
+        $garages = $this->garageService->createBatch([
+            'category' => 'Car',
+            'price' => 100000,
+            'quantity' => 2,
+        ]);
+
+        $this->assertCount(1, $garages);
+        $this->assertEquals('C999', $garages[0]->garage_code);
+        $this->assertDatabaseHas('garages', ['garage_code' => 'C999']);
     }
 
     // =========================================================================
@@ -271,7 +290,6 @@ class GarageTest extends TestCase
     public function test_guest_cannot_create_garage(): void
     {
         $response = $this->post(route('api.garage.store'), [
-            'name' => 'Alpha Garage',
             'price' => 100000,
             'category' => 'Car',
         ]);
@@ -288,7 +306,6 @@ class GarageTest extends TestCase
             'user_id' => $renter->id,
             'user_role' => 'user',
         ])->post(route('api.garage.store'), [
-            'name' => 'Alpha Garage',
             'price' => 100000,
             'category' => 'Car',
         ]);
@@ -306,17 +323,16 @@ class GarageTest extends TestCase
             'user_id' => $admin->id,
             'user_role' => 'admin',
         ])->from(route('garages.index'))->post(route('api.garage.store'), [
-            'name' => 'Alpha Garage',
             'price' => 100000,
             'category' => 'Car',
+            'quantity' => 1,
         ]);
 
         $response->assertRedirect(route('garages.index'));
-        $response->assertSessionHas('success', 'Garage created successfully.');
+        $response->assertSessionHas('success');
 
         $this->assertDatabaseHas('garages', [
             'garage_code' => 'C001',
-            'name' => 'Alpha Garage',
             'price' => 100000,
             'category' => 'Car',
             'status' => 'available',
@@ -335,7 +351,6 @@ class GarageTest extends TestCase
             'user_id' => $admin->id,
             'user_role' => 'admin',
         ])->post(route('api.garage.store'), [
-            'name' => 'EV Fast Charging Bay',
             'price' => 150000,
             'category' => 'Electric Car',
             'price_kwh' => null,
@@ -354,7 +369,6 @@ class GarageTest extends TestCase
             'user_id' => $admin->id,
             'user_role' => 'admin',
         ])->post(route('api.garage.store'), [
-            'name' => 'Standard Car Bay',
             'price' => 80000,
             'category' => 'Car',
             'price_kwh' => 2500, // Should be ignored/nullified for non-EV
@@ -378,13 +392,12 @@ class GarageTest extends TestCase
             'user_id' => $admin->id,
             'user_role' => 'admin',
         ])->post(route('api.garage.store'), [
-            'name' => '',
             'price' => -5000,
             'category' => 'InvalidCategory',
         ]);
 
         $response->assertRedirect();
-        $response->assertSessionHasErrors(['name', 'price', 'category']);
+        $response->assertSessionHasErrors(['price', 'category']);
         $this->assertDatabaseCount('garages', 0);
     }
 
@@ -398,7 +411,6 @@ class GarageTest extends TestCase
 
         Garage::create([
             'garage_code' => 'C001',
-            'name' => 'Bay 1',
             'price' => 100000,
             'category' => 'Car',
             'status' => 'available',
@@ -420,7 +432,6 @@ class GarageTest extends TestCase
 
         $occupiedGarage = Garage::create([
             'garage_code' => 'C001',
-            'name' => 'Occupied Bay',
             'price' => 100000,
             'category' => 'Car',
             'status' => 'used',

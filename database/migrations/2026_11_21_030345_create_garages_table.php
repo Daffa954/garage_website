@@ -13,13 +13,11 @@ return new class extends Migration {
         Schema::create('garages', function (Blueprint $table) {
             $table->id();
             $table->string('garage_code', 4)->unique();
-            $table->string('name');
             // Only for garage EV car
             $table->bigInteger('price_kwh')->nullable();
             $table->bigInteger('price');
             $table->enum('category', [
                 'Bike',
-                'Motor Cycle',
                 'Car',
                 'Electric Car',
             ]);

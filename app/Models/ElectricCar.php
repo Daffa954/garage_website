@@ -26,7 +26,9 @@ class ElectricCar extends Vehicle
     ];
 
     /**
-     * The "booted" method of the model.
+     * The "booted" method of the model to register global scope for Electric Car category.
+     *
+     * @return void
      */
     protected static function booted(): void
     {
@@ -37,6 +39,8 @@ class ElectricCar extends Vehicle
 
     /**
      * Determine if this vehicle is electric.
+     *
+     * @return bool Always true for ElectricCar instances.
      */
     public function isElectric(): bool
     {
@@ -44,7 +48,11 @@ class ElectricCar extends Vehicle
     }
 
     /**
+     * Determine if this electric car can park in the specified garage.
      * Electric cars can park in Electric Car garages or regular Car garages.
+     *
+     * @param Garage $garage Target garage instance.
+     * @return bool True if garage category is 'Electric Car' or 'Car', false otherwise.
      */
     public function canParkInGarage(Garage $garage): bool
     {
@@ -52,7 +60,10 @@ class ElectricCar extends Vehicle
     }
 
     /**
-     * Check if the given battery level is considered fully charged.
+     * Check if the given battery level is considered fully charged (100%).
+     *
+     * @param float $currentBattery Current battery percentage level.
+     * @return bool True if battery level is 100% or greater, false otherwise.
      */
     public function isBatteryFull(float $currentBattery): bool
     {
@@ -60,7 +71,10 @@ class ElectricCar extends Vehicle
     }
 
     /**
-     * Calculate required kWh energy to charge up to 100%.
+     * Calculate required kWh energy to charge battery up to 100% full capacity.
+     *
+     * @param float $currentBattery Current battery level percentage.
+     * @return float Required energy in kWh rounded to 2 decimal places.
      */
     public function calculateEnergyNeeded(float $currentBattery): float
     {

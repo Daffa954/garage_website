@@ -26,7 +26,9 @@ class MotorCycle extends Vehicle
     ];
 
     /**
-     * The "booted" method of the model.
+     * The "booted" method of the model to register global scope for Motor Cycle category.
+     *
+     * @return void
      */
     protected static function booted(): void
     {
@@ -37,6 +39,8 @@ class MotorCycle extends Vehicle
 
     /**
      * Determine if this vehicle requires a motor license plate.
+     *
+     * @return bool Always true because motorcycles require license plates.
      */
     public function requiresLicensePlate(): bool
     {

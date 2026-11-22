@@ -10,16 +10,21 @@ use Illuminate\Validation\Rule;
 
 class VehicleController extends Controller
 {
-    //
+    /**
+     * VehicleController constructor.
+     *
+     * @param VehicleService $vehicleService Service handling vehicle CRUD and querying operations.
+     */
     public function __construct(
         protected VehicleService $vehicleService
     ) {
     }
+
     /**
-     * Store a newly created vehicle record.
+     * Store a newly created vehicle record for the authenticated user.
      *
-     * @param Request $request
-     * @return \Illuminate\Http\RedirectResponse
+     * @param Request $request Incoming HTTP request containing brand, category, plate, and battery capacity.
+     * @return \Illuminate\Http\RedirectResponse Redirect response with success flash message or errors.
      */
     public function store(Request $request)
     {
@@ -47,7 +52,7 @@ class VehicleController extends Controller
     /**
      * Display a listing of vehicles owned by the authenticated user.
      *
-     * @return \Illuminate\View\View
+     * @return \Illuminate\View\View User vehicle management view with vehicles paginator.
      */
     public function index()
     {
@@ -57,6 +62,4 @@ class VehicleController extends Controller
 
         return view('user-vehicle', compact('vehicles'));
     }
-
-
 }

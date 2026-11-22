@@ -26,6 +26,11 @@ class EvCharge extends Model
         'rent_id',
     ];
 
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string> Array of attribute cast definitions.
+     */
     protected function casts(): array
     {
         return [
@@ -33,6 +38,11 @@ class EvCharge extends Model
         ];
     }
 
+    /**
+     * Get the parent rental booking relationship.
+     *
+     * @return BelongsTo BelongsTo relationship instance to Rent model.
+     */
     public function rent(): BelongsTo
     {
         return $this->belongsTo(Rent::class, 'rent_id');

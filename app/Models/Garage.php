@@ -9,7 +9,6 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 /**
  * @property int $id
  * @property string $garage_code
- * @property string $name
  * @property int|null $price_kwh
  * @property int $price
  * @property string $category
@@ -25,33 +24,57 @@ class Garage extends Model
 
     protected $fillable = [
         'garage_code',
-        'name',
         'price_kwh',
         'price',
         'category',
         'status',
     ];
 
+    /**
+     * Get the one-to-many relationship to all rental contracts for this garage.
+     *
+     * @return HasMany HasMany relationship instance to Rent model.
+     */
     public function rents(): HasMany
     {
         return $this->hasMany(Rent::class, 'garage_id');
     }
 
+    /**
+     * Get the latest active rental contract for this garage.
+     *
+     * @return HasOne HasOne relationship instance to the latest Rent model.
+     */
     public function activeRent(): HasOne
     {
         return $this->hasOne(Rent::class, 'garage_id')->latestOfMany();
     }
 
+    /**
+     * Determine if this garage is currently available for rent.
+     *
+     * @return bool True if garage status equals 'available', false otherwise.
+     */
     public function isAvailable(): bool
     {
         return $this->status === 'available';
     }
 
+    /**
+     * Mark this garage facility status as 'used'.
+     *
+     * @return void
+     */
     public function markAsUsed(): void
     {
         $this->update(['status' => 'used']);
     }
 
+    /**
+     * Mark this garage facility status as 'available'.
+     *
+     * @return void
+     */
     public function markAsAvailable(): void
     {
         $this->update(['status' => 'available']);

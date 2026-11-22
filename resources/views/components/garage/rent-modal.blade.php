@@ -6,9 +6,14 @@
     x-data="{
         allVehicles: @js($vehicles),
         selectedVehicleId: '',
+        rentType: 'daily',
+        dailyDays: 1,
+        monthlyMonths: 1,
         startDate: '{{ date('Y-m-d') }}',
-        endDate: '{{ date('Y-m-d', strtotime('+1 day')) }}',
         currentBattery: '',
+        get selectedVehicle() {
+            return this.allVehicles.find(v => String(v.id) === String(this.selectedVehicleId)) || null;
+        },
         get isElectric() {
             return selectedGarage && selectedGarage.category === 'Electric Car';
         },
@@ -16,7 +21,9 @@
             if (!selectedGarage) return [];
             return this.allVehicles.filter(v => {
                 if (v.category === selectedGarage.category) return true;
-                // Electric Car can also park in a regular Car garage (no charging)
+                // Both Bike and Motor Cycle park in Bike (Sepeda) garage
+                if ((v.category === 'Bike' || v.category === 'Motor Cycle') && selectedGarage.category === 'Bike') return true;
+                // Electric Car can also park in regular Car garage (without charging)
                 if (v.category === 'Electric Car' && selectedGarage.category === 'Car') return true;
                 return false;
             });
@@ -33,11 +40,44 @@
             const today = '{{ date('Y-m-d') }}';
             return this.occupiedUntilDate || today;
         },
-        get minEndDate() {
-            const base = this.startDate || this.minStartDate;
-            const d = new Date(base);
-            d.setDate(d.getDate() + 1);
+        get calculatedEndDate() {
+            const baseStr = this.startDate || this.minStartDate;
+            const d = new Date(baseStr + 'T00:00:00');
+            if (this.rentType === 'daily') {
+                const days = Math.min(30, Math.max(1, parseInt(this.dailyDays) || 1));
+                d.setDate(d.getDate() + days);
+            } else {
+                const months = Math.max(1, parseInt(this.monthlyMonths) || 1);
+                d.setMonth(d.getMonth() + months);
+            }
             return d.toISOString().split('T')[0];
+        },
+        get totalDays() {
+            const start = new Date((this.startDate || this.minStartDate) + 'T00:00:00');
+            const end = new Date(this.calculatedEndDate + 'T00:00:00');
+            return Math.max(1, Math.round((end - start) / (1000 * 60 * 60 * 24)));
+        },
+        get rentalPrice() {
+            if (!selectedGarage) return 0;
+            const price = Number(selectedGarage.price);
+            if (this.rentType === 'daily') {
+                const days = Math.min(30, Math.max(1, parseInt(this.dailyDays) || 1));
+                return days * price;
+            } else {
+                const months = Math.max(1, parseInt(this.monthlyMonths) || 1);
+                return months * (25 * price);
+            }
+        },
+        get evChargingPrice() {
+            if (!this.isElectric || !selectedGarage?.price_kwh) return 0;
+            if (!this.selectedVehicle || !this.selectedVehicle.total_kwh) return 0;
+            const battery = parseFloat(this.currentBattery);
+            if (isNaN(battery) || battery >= 100 || battery < 0) return 0;
+            const kwhNeeded = ((100 - battery) / 100) * Number(this.selectedVehicle.total_kwh);
+            return Math.round(kwhNeeded * Number(selectedGarage.price_kwh));
+        },
+        get grandTotal() {
+            return this.rentalPrice + this.evChargingPrice;
         }
     }"
     x-init="
@@ -52,16 +92,10 @@
                 }
             }
             startDate = nextStart;
-            const nextDay = new Date(nextStart);
-            nextDay.setDate(nextDay.getDate() + 1);
-            endDate = nextDay.toISOString().split('T')[0];
-        });
-        $watch('startDate', (val) => {
-            if (val && endDate <= val) {
-                const nextDay = new Date(val);
-                nextDay.setDate(nextDay.getDate() + 1);
-                endDate = nextDay.toISOString().split('T')[0];
-            }
+            rentType = 'daily';
+            dailyDays = 1;
+            monthlyMonths = 1;
+            currentBattery = '';
         });
     "
     x-show="showRentModal"
@@ -80,10 +114,11 @@
         <div class="flex items-center justify-between px-6 py-5 border-b border-gray-200">
             <div>
                 <h2 class="text-lg font-semibold text-gray-800">
-                    Rent Garage
+                    Sewa Garasi Baru
                 </h2>
-                <p class="text-sm text-gray-500 mt-1">
-                    Book <span class="font-medium text-gray-700" x-text="selectedGarage ? selectedGarage.name : ''"></span> (<span class="font-mono text-xs text-green-600" x-text="selectedGarage ? selectedGarage.garage_code : ''"></span>)
+                <p class="text-sm text-gray-500 mt-0.5">
+                    Kode: <span class="font-mono font-bold text-green-700" x-text="selectedGarage ? selectedGarage.garage_code : ''"></span> &bull;
+                    <span class="text-gray-700 font-medium" x-text="selectedGarage ? (selectedGarage.category === 'Bike' ? 'Garasi Sepeda' : (selectedGarage.category === 'Car' ? 'Garasi Mobil' : 'Garasi Mobil Listrik')) : ''"></span>
                 </p>
             </div>
 
@@ -101,22 +136,27 @@
             @csrf
 
             <input type="hidden" name="garage_id" :value="selectedGarage ? selectedGarage.id : ''">
-            <input type="hidden" name="type" :value="selectedGarage ? selectedGarage.category : ''">
+            <input type="hidden" name="start_date" :value="startDate">
+            <input type="hidden" name="end_date" :value="calculatedEndDate">
 
             {{-- Garage Info Summary Box --}}
             <div class="mb-5 rounded-lg bg-gray-50 p-4 border border-gray-200 text-sm">
-                <div class="flex justify-between items-center mb-2">
-                    <span class="text-gray-500">Category:</span>
-                    <span class="font-semibold text-gray-800" x-text="selectedGarage ? selectedGarage.category : '-'"></span>
+                <div class="flex justify-between items-center mb-1.5">
+                    <span class="text-gray-500">Tipe Garasi:</span>
+                    <span class="font-semibold text-gray-800" x-text="selectedGarage ? (selectedGarage.category === 'Bike' ? 'Sepeda & Sepeda Motor' : (selectedGarage.category === 'Car' ? 'Mobil (Bensin)' : 'Mobil Listrik')) : '-'"></span>
                 </div>
-                <div class="flex justify-between items-center mb-2">
-                    <span class="text-gray-500">Daily Rate:</span>
-                    <span class="font-semibold text-green-600" x-text="selectedGarage ? 'Rp ' + Number(selectedGarage.price).toLocaleString('id-ID') : '-'"></span>
+                <div class="flex justify-between items-center mb-1.5">
+                    <span class="text-gray-500">Tarif Harian:</span>
+                    <span class="font-semibold text-green-600" x-text="selectedGarage ? 'Rp ' + Number(selectedGarage.price).toLocaleString('id-ID') + ' / hari' : '-'"></span>
+                </div>
+                <div class="flex justify-between items-center mb-1.5">
+                    <span class="text-gray-500">Tarif Bulanan (25x):</span>
+                    <span class="font-semibold text-green-700" x-text="selectedGarage ? 'Rp ' + Number(selectedGarage.price * 25).toLocaleString('id-ID') + ' / bulan' : '-'"></span>
                 </div>
                 <template x-if="isElectric && selectedGarage?.price_kwh">
-                    <div class="flex justify-between items-center">
-                        <span class="text-gray-500">EV Rate / kWh:</span>
-                        <span class="font-semibold text-emerald-600" x-text="'Rp ' + Number(selectedGarage.price_kwh).toLocaleString('id-ID')"></span>
+                    <div class="flex justify-between items-center pt-1.5 border-t border-gray-200">
+                        <span class="text-gray-500">Tarif Pengisian Listrik:</span>
+                        <span class="font-semibold text-emerald-600" x-text="'Rp ' + Number(selectedGarage.price_kwh).toLocaleString('id-ID') + ' / kWh'"></span>
                     </div>
                 </template>
             </div>
@@ -130,7 +170,7 @@
                     <div>
                         <div class="font-semibold text-amber-900">Garasi sedang dipinjam saat ini</div>
                         <div class="mt-0.5">
-                            Garasi ini sedang disewa sampai <strong x-text="new Date(occupiedUntilDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })"></strong>. Tanggal sewa sebelum tanggal tersebut tidak dapat dipilih.
+                            Garasi ini sedang disewa sampai <strong x-text="new Date(occupiedUntilDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })"></strong>. Tanggal sewa otomatis dimulai dari tanggal tersebut.
                         </div>
                     </div>
                 </div>
@@ -139,14 +179,14 @@
             {{-- Vehicle Selection (Filtered by Garage Category) --}}
             <div class="mb-5">
                 <label for="vehicle_id" class="block text-sm font-medium text-gray-700 mb-2">
-                    Select Your Vehicle (<span class="text-green-600 font-semibold" x-text="selectedGarage ? selectedGarage.category : ''"></span>)
+                    Pilih Kendaraan Anda (<span class="text-green-600 font-semibold" x-text="selectedGarage ? (selectedGarage.category === 'Bike' ? 'Sepeda / Motor' : (selectedGarage.category === 'Car' ? 'Mobil' : 'Mobil Listrik')) : ''"></span>)
                 </label>
 
                 {{-- Alert when user has no matching vehicles for the selected garage category --}}
                 <div x-show="matchingVehicles.length === 0" class="p-3.5 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
-                    <span>You do not have any available vehicle in the <strong x-text="selectedGarage ? selectedGarage.category : ''"></strong> category.</span>
+                    <span>Anda belum memiliki kendaraan yang cocok untuk tipe <strong x-text="selectedGarage ? (selectedGarage.category === 'Bike' ? 'Sepeda / Motor' : (selectedGarage.category === 'Car' ? 'Mobil' : 'Mobil Listrik')) : ''"></strong>.</span>
                     <a href="{{ route('vehicles.index') }}" class="underline font-semibold hover:text-amber-900 block mt-1">
-                        + Register a matching vehicle
+                        + Daftarkan kendaraan yang sesuai
                     </a>
                 </div>
 
@@ -159,9 +199,9 @@
                         ::required="matchingVehicles.length > 0"
                         class="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition"
                     >
-                        <option value="">-- Choose Vehicle --</option>
+                        <option value="">-- Pilih Kendaraan --</option>
                         <template x-for="v in matchingVehicles" :key="v.id">
-                            <option :value="v.id" x-text="`${v.brand} (${v.license_plate ? v.license_plate : 'No Plate'})${selectedGarage?.category === 'Car' && v.category === 'Electric Car' ? ' - EV (No Charging)' : ''}`"></option>
+                            <option :value="v.id" x-text="`${v.brand} (${v.license_plate ? v.license_plate : 'Tanpa Plat'})${selectedGarage?.category === 'Car' && v.category === 'Electric Car' ? ' - Mobil Listrik (Tanpa Charge)' : ''}`"></option>
                         </template>
                     </select>
                 </div>
@@ -171,42 +211,83 @@
                 @enderror
             </div>
 
-            {{-- Rental Dates (Grid 2 Cols) --}}
+            {{-- Tipe Sewa: Harian / Bulanan --}}
+            <div class="mb-5">
+                <label for="rent_type" class="block text-sm font-medium text-gray-700 mb-2">
+                    Tipe Sewa
+                </label>
+                <select
+                    id="rent_type"
+                    name="type"
+                    x-model="rentType"
+                    class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition"
+                >
+                    <option value="daily">Harian</option>
+                    <option value="monthly">Bulanan</option>
+                </select>
+            </div>
+
+            {{-- Durasi Sewa (Jumlah Hari / Bulan) --}}
+            <div class="mb-5">
+                <template x-if="rentType === 'daily'">
+                    <div>
+                        <label for="daily_days" class="block text-sm font-medium text-gray-700 mb-1.5">
+                            Jumlah Hari Sewa <span class="text-xs text-gray-500">(1 - 30 hari)</span>
+                        </label>
+                        <input
+                            type="number"
+                            id="daily_days"
+                            x-model.number="dailyDays"
+                            min="1"
+                            max="30"
+                            required
+                            class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition"
+                        >
+                    </div>
+                </template>
+
+                <template x-if="rentType === 'monthly'">
+                    <div>
+                        <label for="monthly_months" class="block text-sm font-medium text-gray-700 mb-1.5">
+                            Jumlah Bulan Sewa
+                        </label>
+                        <input
+                            type="number"
+                            id="monthly_months"
+                            x-model.number="monthlyMonths"
+                            min="1"
+                            max="12"
+                            required
+                            class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition"
+                        >
+                    </div>
+                </template>
+            </div>
+
+            {{-- Rental Dates (Otomatis) --}}
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
                 <div>
-                    <label for="start_date" class="block text-sm font-medium text-gray-700 mb-2">
-                        Start Date
+                    <label class="block text-xs font-medium text-gray-500 mb-1.5">
+                        Tanggal Mulai Sewa (Hari Ini)
                     </label>
                     <input
                         type="date"
-                        name="start_date"
-                        id="start_date"
-                        x-model="startDate"
-                        :min="minStartDate"
-                        required
-                        class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition"
+                        :value="startDate"
+                        readonly
+                        class="w-full rounded-lg border border-gray-200 bg-gray-100 px-3 py-2 text-sm text-gray-700 cursor-not-allowed outline-none"
                     >
-                    @error('start_date')
-                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                    @enderror
                 </div>
 
                 <div>
-                    <label for="end_date" class="block text-sm font-medium text-gray-700 mb-2">
-                        End Date
+                    <label class="block text-xs font-medium text-gray-500 mb-1.5">
+                        Tanggal Selesai (Otomatis)
                     </label>
                     <input
                         type="date"
-                        name="end_date"
-                        id="end_date"
-                        x-model="endDate"
-                        :min="minEndDate"
-                        required
-                        class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition"
+                        :value="calculatedEndDate"
+                        readonly
+                        class="w-full rounded-lg border border-gray-200 bg-gray-100 px-3 py-2 text-sm text-gray-700 cursor-not-allowed outline-none font-medium"
                     >
-                    @error('end_date')
-                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                    @enderror
                 </div>
             </div>
 
@@ -214,12 +295,12 @@
             <template x-if="isElectric">
                 <div class="mb-5 p-4 rounded-lg bg-emerald-50 border border-emerald-200">
                     <h3 class="text-sm font-semibold text-emerald-800 mb-3 flex items-center gap-2">
-                        <span>⚡</span> EV Charging Details
+                        <span>⚡</span> Detail Pengisian Daya Listrik (Wajib Isi Penuh)
                     </h3>
 
                     <div class="mb-3">
                         <label for="current_battery" class="block text-xs font-medium text-emerald-900 mb-1">
-                            Current Battery Level (%) <span class="text-gray-400 font-normal">(100% = full, no charging fee)</span>
+                            Kapasitas Baterai Saat Ini (%) <span class="text-gray-400 font-normal">(100% = penuh, tanpa biaya listrik)</span>
                         </label>
                         <input
                             type="number"
@@ -229,37 +310,54 @@
                             min="0"
                             max="100"
                             step="0.01"
-                            placeholder="e.g. 45"
+                            placeholder="Contoh: 45"
                             class="w-full rounded-lg border border-emerald-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-emerald-500/20 transition"
                         >
                         <div x-show="Number(currentBattery) >= 100" class="mt-2 text-xs text-emerald-800 bg-emerald-100/80 px-2.5 py-1.5 rounded-md flex items-center gap-1.5">
                             <span>✓</span>
-                            <span>Battery is full (100%). No charging is needed and no charging fee will be billed.</span>
+                            <span>Baterai sudah penuh (100%). Tidak ada biaya tambahan listrik.</span>
                         </div>
-                        @error('ev_charge.current_battery')
-                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
-                        @enderror
                     </div>
 
                     <div>
                         <label for="ev_note" class="block text-xs font-medium text-emerald-900 mb-1">
-                            Charging Note (Optional)
+                            Catatan Pengisian Listrik (Opsional)
                         </label>
                         <input
                             type="text"
                             name="ev_charge[note]"
                             id="ev_note"
-                            placeholder="e.g. Charge to 100% before 8 AM"
+                            placeholder="Contoh: Tolong charge sampai 100% sebelum jam 08.00"
                             class="w-full rounded-lg border border-emerald-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-emerald-500/20 transition"
                         >
                     </div>
                 </div>
             </template>
 
+            {{-- Live Price Summary Box (Dihitung Oleh Sistem) --}}
+            <div class="mb-5 p-4 bg-green-50/70 border border-green-200 rounded-xl space-y-2">
+                <div class="flex justify-between text-xs text-gray-600">
+                    <span>Biaya Sewa Garasi (<span x-text="rentType === 'daily' ? `${dailyDays} hari` : `${monthlyMonths} bulan`"></span>):</span>
+                    <span class="font-semibold text-gray-800" x-text="'Rp ' + Number(rentalPrice).toLocaleString('id-ID')"></span>
+                </div>
+
+                <template x-if="isElectric && evChargingPrice > 0">
+                    <div class="flex justify-between text-xs text-emerald-700">
+                        <span>Biaya Listrik EV (Isi hingga 100%):</span>
+                        <span class="font-semibold" x-text="'Rp ' + Number(evChargingPrice).toLocaleString('id-ID')"></span>
+                    </div>
+                </template>
+
+                <div class="flex justify-between items-center pt-2 border-t border-green-200 text-sm font-bold text-gray-900">
+                    <span>Total Biaya Pelunasan:</span>
+                    <span class="text-base text-green-700" x-text="'Rp ' + Number(grandTotal).toLocaleString('id-ID')"></span>
+                </div>
+            </div>
+
             {{-- Payment Receipt Upload --}}
             <div class="mb-5">
-                <label for="payment_receipt" class="block text-sm font-medium text-gray-700 mb-2">
-                    Payment Receipt (Transfer Proof)
+                <label for="payment_receipt" class="block text-sm font-medium text-gray-700 mb-1.5">
+                    Bukti Pelunasan Biaya (Upload Gambar Transfer)
                 </label>
                 <input
                     type="file"
@@ -276,14 +374,14 @@
 
             {{-- Notes / Remarks --}}
             <div class="mb-6">
-                <label for="rent_note" class="block text-sm font-medium text-gray-700 mb-2">
-                    Note / Remarks (Optional)
+                <label for="rent_note" class="block text-sm font-medium text-gray-700 mb-1.5">
+                    Catatan Sewa (Opsional)
                 </label>
                 <textarea
                     name="note"
                     id="rent_note"
                     rows="2"
-                    placeholder="Any special request or note..."
+                    placeholder="Catatan tambahan bila ada..."
                     class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition"
                 ></textarea>
                 @error('note')
@@ -298,15 +396,15 @@
                     @click="showRentModal = false"
                     class="px-4 py-2.5 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition"
                 >
-                    Cancel
+                    Batal
                 </button>
 
                 <button
                     type="submit"
                     :disabled="matchingVehicles.length === 0"
-                    class="px-5 py-2.5 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                    class="px-5 py-2.5 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-sm"
                 >
-                    Confirm & Rent
+                    Simpan & Sewa Garasi
                 </button>
             </div>
         </form>

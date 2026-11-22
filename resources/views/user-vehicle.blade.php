@@ -1,34 +1,35 @@
 @extends('layouts.app')
 
-@section('title', 'My Vehicles - Garage Rental')
+@section('title', 'Kendaraan Saya - Sewa Garasi')
 
 @section('content')
     <div class="max-w-7xl mx-auto px-4 py-8" x-data="{ showCreateModal: {{ $errors->any() ? 'true' : 'false' }} }">
 
         {{-- Page Header --}}
-        <div class="max-w-7xl mx-auto px-4 py-8 flex justify-between">
+        <div class="max-w-7xl mx-auto px-4 py-8 flex justify-between items-center">
             <div>
-                <h1 class="text-2xl font-bold text-gray-800">My Vehicles</h1>
+                <h1 class="text-2xl font-bold text-gray-800">Kendaraan Saya</h1>
                 <p class="text-sm text-gray-500 mt-1">
-                    Manage your registered vehicles.
+                    Kelola data kendaraan yang terdaftar pada akun Anda.
                 </p>
             </div>
 
             <button type="button" @click="showCreateModal = true"
-                class="inline-flex items-center justify-center px-4 py-2.5 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition">
+                class="inline-flex items-center justify-center px-4 py-2.5 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition shadow-sm">
                 <span class="mr-2 text-lg">+</span>
-                Add Vehicle
+                Tambah Kendaraan
             </button>
         </div>
+
         {{-- Info Total Vehicle --}}
         <div class="bg-white border border-gray-200 rounded-xl p-6 mb-8 shadow-sm">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-500">Total Registered Vehicles</p>
+                    <p class="text-sm font-medium text-gray-500">Total Kendaraan Terdaftar</p>
                     <h2 class="text-3xl font-bold text-gray-800 mt-2">
                         {{ $vehicles->total() }}
                     </h2>
-                    <p class="text-xs text-gray-400 mt-1">Vehicles registered to your account</p>
+                    <p class="text-xs text-gray-400 mt-1">Jumlah kendaraan milik Anda yang dapat diparkir</p>
                 </div>
 
                 <div class="w-14 h-14 flex items-center justify-center bg-green-50 text-green-600 rounded-xl">
@@ -45,9 +46,9 @@
         <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
 
             <div class="px-6 py-5 border-b border-gray-200">
-                <h2 class="text-lg font-semibold text-gray-800">Vehicle List</h2>
+                <h2 class="text-lg font-semibold text-gray-800">Daftar Kendaraan</h2>
                 <p class="text-sm text-gray-500 mt-1">
-                    All vehicles registered under your account.
+                    Seluruh kendaraan yang telah terdaftar untuk disewakan garasi.
                 </p>
             </div>
 
@@ -62,24 +63,22 @@
                     </div>
 
                     <h3 class="text-lg font-semibold text-gray-700">
-                        No vehicles found
+                        Belum ada kendaraan terdaftar
                     </h3>
                     <p class="text-sm text-gray-500 mt-1">
-                        You haven't registered any vehicles yet.
+                        Silakan daftarkan kendaraan Anda untuk mulai menyewa garasi yang sesuai.
                     </p>
-
-                   
                 </div>
             @else
                 <div class="overflow-x-auto">
 
                     <x-commons.datatable :headers="[
                         ['label' => '#'],
-                        ['label' => 'Brand'],
-                        ['label' => 'License Plate'],
-                        ['label' => 'Category'],
-                        ['label' => 'Battery Capacity'],
-                        ['label' => 'Actions', 'class' => 'text-center'],
+                        ['label' => 'Merek & Tipe'],
+                        ['label' => 'Nomor Plat'],
+                        ['label' => 'Kategori'],
+                        ['label' => 'Kapasitas Baterai Listrik'],
+                        ['label' => 'Status Sewa', 'class' => 'text-center'],
                     ]">
 
                         @foreach ($vehicles as $vehicle)
@@ -93,11 +92,17 @@
                                 </td>
 
                                 <td class="px-6 py-4 text-gray-600">
-                                    {{ $vehicle->license_plate ?? '-' }}
+                                    {{ $vehicle->license_plate ?? 'Tanpa Plat' }}
                                 </td>
 
                                 <td class="px-6 py-4 text-gray-600">
-                                    {{ $vehicle->category ?? '-' }}
+                                    {{ match ($vehicle->category) {
+                                        'Bike' => 'Sepeda',
+                                        'Motor Cycle' => 'Sepeda Motor',
+                                        'Car' => 'Mobil (Bensin)',
+                                        'Electric Car' => 'Mobil Listrik',
+                                        default => $vehicle->category,
+                                    } }}
                                 </td>
 
                                 <td class="px-6 py-4 text-gray-600">
@@ -105,7 +110,15 @@
                                 </td>
 
                                 <td class="px-6 py-4 text-center">
-                                    {{ $vehicle->owner_id ?? '-' }}
+                                    @if ($vehicle->is_parked)
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">
+                                            Sedang Terparkir
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
+                                            Bisa Disewakan
+                                        </span>
+                                    @endif
                                 </td>
                             </tr>
                         @endforeach

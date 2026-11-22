@@ -14,8 +14,8 @@ class VehicleService
     /**
      * Create a new vehicle record using the appropriate subclass model.
      *
-     * @param array $data Validated vehicle data.
-     * @return Vehicle
+     * @param array $data Validated vehicle data attributes.
+     * @return Vehicle Newly created vehicle instance.
      */
     public function create(array $data): Vehicle
     {
@@ -40,9 +40,9 @@ class VehicleService
     /**
      * Update an existing vehicle record.
      *
-     * @param int $id Vehicle ID.
-     * @param array $data Validated vehicle data.
-     * @return Vehicle
+     * @param int $id Target Vehicle ID.
+     * @param array $data Validated vehicle update attributes.
+     * @return Vehicle Updated vehicle instance.
      */
     public function update(int $id, array $data): Vehicle
     {
@@ -62,8 +62,8 @@ class VehicleService
     /**
      * Delete an existing vehicle record.
      *
-     * @param int $id Vehicle ID.
-     * @return bool
+     * @param int $id Target Vehicle ID to delete.
+     * @return bool True on successful deletion, false otherwise.
      */
     public function delete(int $id): bool
     {
@@ -73,15 +73,22 @@ class VehicleService
     }
 
     /**
-     * Retrieve all vehicles owned by a specific user with pagination.
+     * Retrieve all vehicles owned by a specific user with pagination and park status.
      *
-     * @param int|null $userId User ID.
-     * @param int $perPage Items per page.
-     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     * @param int|null $userId Target owner User ID.
+     * @param int $perPage Number of vehicle items per page.
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator Paginated list of owned vehicles with is_parked boolean attribute.
      */
     public function getAllVehiclesByUserID(?int $userId, int $perPage = 10)
     {
         return Vehicle::where('owner_id', $userId)
+            ->withExists([
+                'rents as is_parked' => function ($query) {
+                    $query->whereHas('garage', function ($q) {
+                        $q->where('status', '!=', 'available');
+                    });
+                }
+            ])
             ->latest()
             ->paginate($perPage);
     }

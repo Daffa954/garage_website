@@ -41,7 +41,7 @@ class User extends Authenticatable
     /**
      * Get the attributes that should be cast.
      *
-     * @return array<string, string>
+     * @return array<string, string> Array of attribute cast definitions.
      */
     protected function casts(): array
     {
@@ -52,31 +52,61 @@ class User extends Authenticatable
         ];
     }
 
+    /**
+     * Get the one-to-many relationship to all vehicles owned by this user.
+     *
+     * @return HasMany HasMany relationship instance to Vehicle model.
+     */
     public function vehicles(): HasMany
     {
         return $this->hasMany(Vehicle::class, 'owner_id');
     }
 
+    /**
+     * Get the one-to-many relationship to bicycles owned by this user.
+     *
+     * @return HasMany HasMany relationship instance to Bike model.
+     */
     public function bikes(): HasMany
     {
         return $this->hasMany(Bike::class, 'owner_id');
     }
 
+    /**
+     * Get the one-to-many relationship to motorcycles owned by this user.
+     *
+     * @return HasMany HasMany relationship instance to MotorCycle model.
+     */
     public function motorCycles(): HasMany
     {
         return $this->hasMany(MotorCycle::class, 'owner_id');
     }
 
+    /**
+     * Get the one-to-many relationship to gasoline cars owned by this user.
+     *
+     * @return HasMany HasMany relationship instance to Car model.
+     */
     public function cars(): HasMany
     {
         return $this->hasMany(Car::class, 'owner_id');
     }
 
+    /**
+     * Get the one-to-many relationship to electric cars owned by this user.
+     *
+     * @return HasMany HasMany relationship instance to ElectricCar model.
+     */
     public function electricCars(): HasMany
     {
         return $this->hasMany(ElectricCar::class, 'owner_id');
     }
 
+    /**
+     * Get the one-to-many relationship to all garage rental transactions made by this user.
+     *
+     * @return HasMany HasMany relationship instance to Rent model.
+     */
     public function rents(): HasMany
     {
         return $this->hasMany(Rent::class, 'renter_id');

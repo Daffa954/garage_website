@@ -28,7 +28,6 @@ class GarageSeeder extends Seeder
             $code = 'C' . str_pad($i, 3, '0', STR_PAD_LEFT);
             $garages[] = [
                 'garage_code' => $code,
-                'name' => "Garage Car {$i}",
                 'price_kwh' => null,
                 'price' => 50000,
                 'category' => 'Car',
@@ -43,7 +42,6 @@ class GarageSeeder extends Seeder
             $code = 'E' . str_pad($i, 3, '0', STR_PAD_LEFT);
             $garages[] = [
                 'garage_code' => $code,
-                'name' => "Garage EV {$i}",
                 'price_kwh' => 2500,
                 'price' => 60000,
                 'category' => 'Electric Car',
@@ -53,31 +51,14 @@ class GarageSeeder extends Seeder
             ];
         }
 
-        // 3. Bike & Motor Cycle Garages (S001 - S998)
-        // Bike: S001 - S499
-        for ($i = 1; $i <= 499; $i++) {
+        // 3. Bike Garages (Sepeda & Sepeda Motor: S001 - S998)
+        for ($i = 1; $i <= 998; $i++) {
             $code = 'S' . str_pad($i, 3, '0', STR_PAD_LEFT);
             $garages[] = [
                 'garage_code' => $code,
-                'name' => "Garage Bike {$i}",
                 'price_kwh' => null,
-                'price' => 10000,
+                'price' => 15000,
                 'category' => 'Bike',
-                'status' => 'available',
-                'created_at' => $now,
-                'updated_at' => $now,
-            ];
-        }
-
-        // Motor Cycle: S500 - S998
-        for ($i = 500; $i <= 998; $i++) {
-            $code = 'S' . str_pad($i, 3, '0', STR_PAD_LEFT);
-            $garages[] = [
-                'garage_code' => $code,
-                'name' => "Garage Motor " . ($i - 499),
-                'price_kwh' => null,
-                'price' => 20000,
-                'category' => 'Motor Cycle',
                 'status' => 'available',
                 'created_at' => $now,
                 'updated_at' => $now,

@@ -11,15 +11,20 @@ use Illuminate\Validation\Rule;
 
 class GarageController extends Controller
 {
+    /**
+     * GarageController constructor.
+     *
+     * @param GarageService $garageService Service handling garage data queries and batch creation.
+     */
     public function __construct(
         protected GarageService $garageService
     ) {
     }
 
     /**
-     * Display a listing of all garages.
+     * Display a listing of all garages and the current user's available vehicles.
      *
-     * @return \Illuminate\View\View
+     * @return \Illuminate\View\View Garage listing view with garages paginator and vehicles collection.
      */
     public function index()
     {
@@ -29,15 +34,15 @@ class GarageController extends Controller
     }
 
     /**
-     * Store a newly created garage facility.
+     * Store a newly created batch of garage facilities (Admin only).
      *
-     * @param Request $request
-     * @return \Illuminate\Http\RedirectResponse
+     * @param Request $request Incoming HTTP request with garage category, price, quantity, and EV price_kwh.
+     * @return \Illuminate\Http\RedirectResponse Redirect response with success flash or validation errors.
      */
     public function store(Request $request)
     {
         $data = $request->validate([
-            'name' => 'required|string|max:255',
+            'quantity' => 'nullable|integer|min:1|max:999',
 
             'price_kwh' => [
                 'nullable',
@@ -62,6 +67,8 @@ class GarageController extends Controller
             ],
         ]);
 
+        $data['quantity'] = (int) ($data['quantity'] ?? 1);
+
         // Electricity price per kWh only applies to Electric Car garages.
         if ($data['category'] !== 'Electric Car') {
             $data['price_kwh'] = null;
@@ -74,11 +81,15 @@ class GarageController extends Controller
         }
 
         try {
-            $this->garageService->create($data);
+            $created = $this->garageService->createBatch($data);
+            $count = $created->count();
+            $codeMsg = $count > 1
+                ? "{$created->first()->garage_code} to {$created->last()->garage_code}"
+                : "{$created->first()->garage_code}";
 
             return back()->with(
                 'success',
-                'Garage created successfully.'
+                "Successfully created {$count} garage(s) ({$codeMsg})."
             );
         } catch (\Throwable $e) {
             return back()
@@ -86,5 +97,4 @@ class GarageController extends Controller
                 ->withInput();
         }
     }
-
 }

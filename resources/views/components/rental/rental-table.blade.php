@@ -1,21 +1,18 @@
-@props([
-    'rents',
-    'isAdmin' => false,
-])
+@props(['rents', 'isAdmin' => false])
 
 {{-- Rental Transactions List --}}
 <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
     <div class="px-6 py-5 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div>
             <h2 class="text-lg font-semibold text-gray-800">
-                {{ $isAdmin ? 'Rental Transactions & Report' : 'My Booking History & Details' }}
+                {{ $isAdmin ? 'Daftar Transaksi Persewaan & Laporan' : 'Riwayat & Rincian Persewaan Saya' }}
             </h2>
             <p class="text-sm text-gray-500 mt-0.5">
-                {{ request()->anyFilled(['start_date', 'end_date', 'garage_type', 'renter_id']) ? 'Showing transactions matching the applied filter criteria.' : 'List of all garage rental transactions and payment receipts.' }}
+                {{ request()->anyFilled(['start_date', 'end_date', 'garage_type', 'renter_id']) ? 'Menampilkan data transaksi yang sesuai dengan kriteria filter.' : 'Daftar seluruh transaksi persewaan garasi dan bukti pelunasan biaya.' }}
             </p>
         </div>
         <div class="text-xs text-gray-400">
-            Showing {{ $rents->count() }} of {{ $rents->total() }} entries
+            Menampilkan {{ $rents->count() }} dari {{ $rents->total() }} data
         </div>
     </div>
 
@@ -29,15 +26,15 @@
                 </svg>
             </div>
 
-            <h3 class="text-lg font-semibold text-gray-700">No rentals found</h3>
+            <h3 class="text-lg font-semibold text-gray-700">Tidak ada transaksi ditemukan</h3>
             <p class="text-sm text-gray-500 mt-1">
-                {{ $isAdmin ? 'No customer rental transactions have been recorded yet.' : "You haven't rented any garage yet." }}
+                {{ $isAdmin ? 'Belum ada transaksi persewaan pelanggan yang tercatat.' : 'Anda belum pernah menyewa garasi.' }}
             </p>
 
             @if (!$isAdmin)
                 <a href="{{ route('garages.index') }}"
-                    class="inline-block mt-5 px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition">
-                    Browse Available Garages
+                    class="inline-block mt-5 px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition shadow-sm">
+                    Lihat Garasi yang Tersedia
                 </a>
             @endif
         </div>
@@ -45,20 +42,18 @@
         <div class="overflow-x-auto py-3 px-6">
             <x-commons.datatable :headers="array_filter([
                 ['label' => '#'],
-                $isAdmin ? ['label' => 'Renter'] : null,
-                ['label' => 'Garage'],
-                ['label' => 'Vehicle'],
-                ['label' => 'Rental Period'],
-                ['label' => 'Days'],
-                ['label' => 'Total Price'],
-                ['label' => 'Receipt'],
-                ['label' => 'Status', 'class' => 'text-center'],
-                ['label' => 'Actions', 'class' => 'text-center no-print'],
+                $isAdmin ? ['label' => 'Penyewa'] : null,
+                ['label' => 'Garasi'],
+                ['label' => 'Kendaraan'],
+                ['label' => 'Periode Sewa'],
+                ['label' => 'Jumlah Hari'],
+                ['label' => 'Total Biaya'],
+                ['label' => 'Aksi', 'class' => 'text-center no-print'],
             ])">
                 @foreach ($rents as $rent)
                     <tr @click="openDetail({{ json_encode($rent) }})"
                         class="hover:bg-gray-50/80 transition cursor-pointer group"
-                        title="Click to view details & receipts">
+                        title="Klik untuk melihat rincian & bukti bayar">
                         <td class="px-6 py-4 text-gray-500">
                             {{ $rents->firstItem() + $loop->index }}
                         </td>
@@ -73,40 +68,42 @@
 
                         {{-- Garage Info --}}
                         <td class="px-6 py-4">
-                            <div class="font-medium text-gray-900">{{ $rent->garage?->name ?? '-' }}</div>
-                            <div class="flex items-center gap-1.5 mt-0.5">
-                                <span
-                                    class="font-mono text-xs text-green-700">{{ $rent->garage?->garage_code ?? '-' }}</span>
-                                <span class="text-xs text-gray-400">&bull;</span>
-                                <span class="text-xs text-gray-500">{{ $rent->garage?->category ?? '-' }}</span>
+                            <div class="font-mono font-semibold text-green-700">{{ $rent->garage?->garage_code ?? '-' }}</div>
+                            <div class="text-xs text-gray-500 mt-0.5">
+                                {{ match ($rent->garage?->category) {
+                                    'Bike' => 'Garasi Sepeda',
+                                    'Car' => 'Garasi Mobil',
+                                    'Electric Car' => 'Garasi Mobil Listrik',
+                                    default => $rent->garage?->category ?? '-',
+                                } }}
                             </div>
                         </td>
 
                         {{-- Vehicle Info --}}
                         <td class="px-6 py-4">
                             <div class="font-medium text-gray-900">{{ $rent->vehicle?->brand ?? '-' }}</div>
-                            <div class="text-xs text-gray-500">{{ $rent->vehicle?->license_plate ?? 'No Plate' }}
+                            <div class="text-xs text-gray-500">{{ $rent->vehicle?->license_plate ?? 'Tanpa Plat' }}
                             </div>
                         </td>
 
                         {{-- Rental Period --}}
                         <td class="px-6 py-4 text-gray-700 text-xs">
                             <div>{{ $rent->start_date ? $rent->start_date->format('d M Y') : '-' }}</div>
-                            <div class="text-gray-400">to
+                            <div class="text-gray-400">s.d.
                                 {{ $rent->end_date ? $rent->end_date->format('d M Y') : '-' }}
                             </div>
                         </td>
 
                         {{-- Total Days --}}
                         <td class="px-6 py-4 text-gray-600 font-medium">
-                            <div>{{ $rent->total_day }} days</div>
+                            <div>{{ $rent->total_day }} hari</div>
                             @php
                                 $extensionCount = $rent->rentDetails->where('is_extension', true)->count();
                             @endphp
                             @if ($extensionCount > 0)
                                 <span
                                     class="inline-flex items-center px-1.5 py-0.5 mt-0.5 rounded text-[10px] font-medium bg-green-50 text-green-700 border border-green-200">
-                                    +{{ $extensionCount }} extension{{ $extensionCount > 1 ? 's' : '' }}
+                                    +{{ $extensionCount }} perpanjangan
                                 </span>
                             @endif
                         </td>
@@ -114,66 +111,15 @@
                         {{-- Total Price (Grand Total) --}}
                         <td class="px-6 py-4">
                             <div class="font-bold text-gray-900">
-                                Rp {{ number_format($rent->total_price + $rent->evCharges->sum('price_charge'), 0, ',', '.') }}
+                                Rp
+                                {{ number_format($rent->total_price + $rent->evCharges->sum('price_charge'), 0, ',', '.') }}
                             </div>
                             @if ($rent->evCharges->isNotEmpty())
                                 <div class="text-[11px] text-gray-500 mt-0.5 space-y-0.5">
-                                    <div>Rent: Rp {{ number_format($rent->total_price, 0, ',', '.') }}</div>
-                                    <div class="text-emerald-600 font-medium">⚡ EV: Rp {{ number_format($rent->evCharges->sum('price_charge'), 0, ',', '.') }}</div>
+                                    <div>Sewa: Rp {{ number_format($rent->total_price, 0, ',', '.') }}</div>
+                                    <div class="text-emerald-600 font-medium">⚡ Cas: Rp
+                                        {{ number_format($rent->evCharges->sum('price_charge'), 0, ',', '.') }}</div>
                                 </div>
-                            @endif
-                        </td>
-
-                        {{-- Payment Receipt Link --}}
-                        <td class="px-6 py-4 text-xs">
-                            @php
-                                $receiptUrl = $rent->payments->first()?->url_payment_receipt;
-                                $evReceiptUrl = $rent->evCharges->first()?->url_payment_receipt;
-                            @endphp
-
-                            <div class="flex flex-col gap-1">
-                                @if ($receiptUrl)
-                                    <a href="{{ $receiptUrl }}" target="_blank" @click.stop
-                                        class="inline-flex items-center gap-1 text-green-600 hover:text-green-800 font-medium hover:underline">
-                                        <span>Rent Receipt</span>
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none"
-                                            viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                                        </svg>
-                                    </a>
-                                @endif
-
-                                @if ($evReceiptUrl && $evReceiptUrl !== $receiptUrl)
-                                    <a href="{{ $evReceiptUrl }}" target="_blank" @click.stop
-                                        class="inline-flex items-center gap-1 text-emerald-600 hover:text-emerald-800 font-medium hover:underline">
-                                        <span>⚡ EV Receipt</span>
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none"
-                                            viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                                        </svg>
-                                    </a>
-                                @endif
-
-                                @if (!$receiptUrl && !$evReceiptUrl)
-                                    <span class="text-gray-400">-</span>
-                                @endif
-                            </div>
-                        </td>
-
-                        {{-- Status Badge --}}
-                        <td class="px-6 py-4 text-center">
-                            @if ($rent->end_date && $rent->end_date >= today())
-                                <span
-                                    class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
-                                    Active
-                                </span>
-                            @else
-                                <span
-                                    class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700">
-                                    Completed
-                                </span>
                             @endif
                         </td>
 
@@ -182,15 +128,15 @@
                             <div class="flex items-center justify-center gap-1.5">
                                 <button type="button" @click="openDetail({{ json_encode($rent) }})"
                                     class="inline-flex items-center px-2.5 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold rounded-lg transition"
-                                    title="View Breakdown & Receipts">
-                                    Details
+                                    title="Lihat Rincian & Bukti Bayar">
+                                    Detail
                                 </button>
 
                                 @if ($isAdmin && $rent->end_date && $rent->end_date >= today())
                                     <button type="button" @click="openExtend({{ json_encode($rent) }})"
                                         class="inline-flex items-center px-2.5 py-1.5 bg-green-50 border border-green-200 text-green-700 hover:bg-green-600 hover:text-white text-xs font-semibold rounded-lg transition"
-                                        title="Extend this rental contract">
-                                        Extend
+                                        title="Perpanjang kontrak sewa garasi ini">
+                                        Perpanjang
                                     </button>
                                 @endif
                             </div>
@@ -200,7 +146,7 @@
             </x-commons.datatable>
 
             @if ($rents->hasPages())
-                <div class="px-6 py-4 border-t border-gray-200 no-print">
+                <div class="px-6 py-4 border-t border-gray-200">
                     {{ $rents->links() }}
                 </div>
             @endif

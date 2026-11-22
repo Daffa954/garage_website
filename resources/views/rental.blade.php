@@ -5,7 +5,7 @@
     $isRenter = $role === 'user';
 @endphp
 
-@section('title', $isAdmin ? 'All Rentals & Report - GarageApp' : 'My Rentals & Report - GarageApp')
+@section('title', $isAdmin ? 'Laporan & Seluruh Persewaan - Sewa Garasi' : 'Riwayat Persewaan Saya - Sewa Garasi')
 
 @section('content')
     <div class="max-w-7xl mx-auto px-4 py-8" x-data="{
@@ -38,7 +38,7 @@
         formatDate(dateStr) {
             if (!dateStr) return '-';
             const d = new Date(dateStr.split('T')[0]);
-            return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+            return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
         },
         formatCurrency(amount) {
             return 'Rp ' + Number(amount || 0).toLocaleString('id-ID');
@@ -98,35 +98,21 @@
     {{-- Print Styles --}}
     <style>
         @media print {
-            header, nav, footer, .no-print, [role="navigation"] {
-                display: none !important;
-            }
             body {
-                background: #ffffff !important;
-                color: #000000 !important;
-                font-size: 11px !important;
+                background: white !important;
+                color: black !important;
+            }
+            .no-print, header, footer, button, select, input {
+                display: none !important;
             }
             .print-only {
                 display: block !important;
             }
-            .max-w-7xl {
-                max-width: 100% !important;
-                padding: 0 !important;
-                margin: 0 !important;
-            }
-            .shadow-sm, .shadow-md, .shadow-lg, .shadow {
+            .shadow-sm, .shadow-xl, .shadow-2xl {
                 box-shadow: none !important;
             }
-            .border, .border-b, .border-t {
-                border-color: #cbd5e1 !important;
-            }
-            table {
-                width: 100% !important;
-                border-collapse: collapse !important;
-            }
-            th, td {
-                border: 1px solid #e2e8f0 !important;
-                padding: 6px 8px !important;
+            .border {
+                border-color: #ddd !important;
             }
         }
         @media screen {

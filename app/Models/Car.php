@@ -26,7 +26,9 @@ class Car extends Vehicle
     ];
 
     /**
-     * The "booted" method of the model.
+     * The "booted" method of the model to register global scope for Car category.
+     *
+     * @return void
      */
     protected static function booted(): void
     {
@@ -37,6 +39,8 @@ class Car extends Vehicle
 
     /**
      * Determine if this vehicle is electric.
+     *
+     * @return bool Always false for regular gasoline cars.
      */
     public function isElectric(): bool
     {

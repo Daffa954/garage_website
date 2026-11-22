@@ -13,6 +13,11 @@ use RuntimeException;
 
 class RentService
 {
+    /**
+     * RentService constructor.
+     *
+     * @param EvChargeService $evChargeService Service handling EV charging creation.
+     */
     public function __construct(
         private EvChargeService $evChargeService
     ) {
@@ -212,7 +217,7 @@ class RentService
      * @param int|null $userId ID of the currently authenticated user.
      * @param bool $isAdmin Whether the user has admin privileges.
      * @param int $perPage Number of items per page for pagination.
-     * @return array
+     * @return array Array containing paginated rents, aggregated financial metrics, category list, and active filters.
      *
      * @throws InvalidArgumentException If start date is after end date.
      */

@@ -53,7 +53,6 @@ class RentalTest extends TestCase
     protected function createGarage(array $attributes = []): Garage
     {
         return Garage::create(array_merge([
-            'name' => 'Alpha Garage',
             'category' => 'Car',
             'garage_code' => 'C001',
             'price' => 100000,
@@ -346,7 +345,6 @@ class RentalTest extends TestCase
     {
         $renter = $this->createRenter();
         $evGarage = $this->createGarage([
-            'name' => 'Fast EV Bay',
             'category' => 'Electric Car',
             'garage_code' => 'E001',
             'price' => 150000,
@@ -394,7 +392,6 @@ class RentalTest extends TestCase
     {
         $renter = $this->createRenter();
         $evGarage = $this->createGarage([
-            'name' => 'Fast EV Bay',
             'category' => 'Electric Car',
             'garage_code' => 'E001',
             'price' => 150000,
@@ -431,7 +428,6 @@ class RentalTest extends TestCase
         $renter = $this->createRenter();
         // Regular Car garage (no charging capability)
         $carGarage = $this->createGarage([
-            'name' => 'Standard Car Bay',
             'category' => 'Car',
             'garage_code' => 'C001',
             'price' => 100000,

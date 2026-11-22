@@ -28,7 +28,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class Rent extends Model
 {
-
     protected $fillable = [
         'total_day',
         'start_date',
@@ -40,6 +39,11 @@ class Rent extends Model
         'vehicle_id',
     ];
 
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string> Array of attribute cast definitions.
+     */
     protected function casts(): array
     {
         return [
@@ -48,31 +52,61 @@ class Rent extends Model
         ];
     }
 
+    /**
+     * Get the renter user relationship for this transaction.
+     *
+     * @return BelongsTo BelongsTo relationship instance to User model.
+     */
     public function renter(): BelongsTo
     {
         return $this->belongsTo(User::class, 'renter_id');
     }
 
+    /**
+     * Get the rented garage relationship for this transaction.
+     *
+     * @return BelongsTo BelongsTo relationship instance to Garage model.
+     */
     public function garage(): BelongsTo
     {
         return $this->belongsTo(Garage::class, 'garage_id');
     }
 
+    /**
+     * Get the parked vehicle relationship for this transaction.
+     *
+     * @return BelongsTo BelongsTo relationship instance to Vehicle model.
+     */
     public function vehicle(): BelongsTo
     {
         return $this->belongsTo(Vehicle::class, 'vehicle_id');
     }
 
+    /**
+     * Get the detailed rental periods and extension history.
+     *
+     * @return HasMany HasMany relationship instance to RentDetail model.
+     */
     public function rentDetails(): HasMany
     {
         return $this->hasMany(RentDetail::class, 'rent_id');
     }
 
+    /**
+     * Get all payment proof receipts attached to this rental transaction.
+     *
+     * @return HasMany HasMany relationship instance to RentPayment model.
+     */
     public function payments(): HasMany
     {
         return $this->hasMany(RentPayment::class, 'rent_id');
     }
 
+    /**
+     * Get all electric vehicle charging session records attached to this rental transaction.
+     *
+     * @return HasMany HasMany relationship instance to EvCharge model.
+     */
     public function evCharges(): HasMany
     {
         return $this->hasMany(EvCharge::class, 'rent_id');
@@ -88,7 +122,7 @@ class Rent extends Model
      * @param int|float $dailyPrice Daily garage rental price.
      * @param Carbon|null $startDate Optional custom start date (defaults to $this->start_date).
      * @param Carbon|null $endDate Optional custom end date (defaults to $this->end_date).
-     * @return array<int, array{type: string, start_date: string, end_date: string, total_day: int, total_price: int|float}>
+     * @return array<int, array{type: string, start_date: string, end_date: string, total_day: int, total_price: int|float}> Array of calculated period details.
      */
     public function calculatePeriods(
         int|float $dailyPrice,
@@ -137,9 +171,9 @@ class Rent extends Model
     /**
      * Calculate rental extension periods from current rental end date to a new target end date.
      *
-     * @param Carbon|string $newEndDate
-     * @param int|float $dailyPrice
-     * @return array<int, array{type: string, start_date: string, end_date: string, total_day: int, total_price: int|float}>
+     * @param Carbon|string $newEndDate Target extension end date.
+     * @param int|float $dailyPrice Daily garage rental price.
+     * @return array<int, array{type: string, start_date: string, end_date: string, total_day: int, total_price: int|float}> Array of calculated extension period details.
      */
     public function calculateExtensionPeriods(Carbon|string $newEndDate, int|float $dailyPrice): array
     {

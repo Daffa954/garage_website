@@ -13,6 +13,11 @@ use InvalidArgumentException;
 
 class RentController extends Controller
 {
+    /**
+     * RentController constructor.
+     *
+     * @param RentService $rentService Service handling rental transactions, report metrics, and extensions.
+     */
     public function __construct(
         protected RentService $rentService
     ) {
@@ -22,8 +27,8 @@ class RentController extends Controller
      * Display a listing of rental transactions and rental reports.
      * Delegates filtering, metric aggregation, and querying to RentService.
      *
-     * @param Request $request
-     * @return \Illuminate\View\View|\Illuminate\Http\RedirectResponse
+     * @param Request $request Incoming HTTP request containing optional filter parameters.
+     * @return \Illuminate\View\View Rental transaction and report view.
      */
     public function index(Request $request)
     {
@@ -50,8 +55,8 @@ class RentController extends Controller
     /**
      * Store a new rental booking transaction.
      *
-     * @param Request $request
-     * @return \Illuminate\Http\RedirectResponse
+     * @param Request $request Incoming HTTP request with garage, vehicle, dates, receipt, and EV payload.
+     * @return \Illuminate\Http\RedirectResponse Redirect response with success flash message or errors.
      */
     public function store(Request $request)
     {
@@ -134,9 +139,9 @@ class RentController extends Controller
     /**
      * Extend an existing rental contract (Admin only).
      *
-     * @param Request $request
-     * @param int $id Rent ID
-     * @return \Illuminate\Http\RedirectResponse
+     * @param Request $request Incoming HTTP request containing new_end_date, payment_receipt, and note.
+     * @param int $id ID of the Rent model instance to extend.
+     * @return \Illuminate\Http\RedirectResponse Redirect response with success flash message or errors.
      */
     public function extend(Request $request, int $id)
     {

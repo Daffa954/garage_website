@@ -17,7 +17,7 @@
                 </svg>
             </div>
             <div>
-                <h2 class="text-base font-semibold text-gray-800">Filter & Report Criteria</h2>
+                <h2 class="text-base font-semibold text-gray-800">Filter & Kriteria Laporan Persewaan</h2>
             </div>
         </div>
 
@@ -25,7 +25,7 @@
             <div class="flex items-center gap-2">
                 <span
                     class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-50 text-green-700 border border-green-100">
-                    Active Filter
+                    Filter Aktif
                 </span>
                 <a href="{{ route('rents.index') }}"
                     class="text-xs text-rose-600 hover:text-rose-800 font-medium hover:underline">
@@ -41,7 +41,7 @@
                 {{-- 1. Start Date --}}
                 <div>
                     <label for="filter_start_date" class="block text-xs font-medium text-gray-700 mb-1">
-                        Start Date
+                        Dari Tanggal (Mulai)
                     </label>
                     <input type="date" name="start_date" id="filter_start_date" value="{{ request('start_date') }}"
                         class="w-full text-xs rounded-lg py-2 px-3 border-[0.5px] border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 bg-white">
@@ -50,7 +50,7 @@
                 {{-- 2. End Date --}}
                 <div>
                     <label for="filter_end_date" class="block text-xs font-medium text-gray-700 mb-1">
-                        End Date
+                        Sampai Tanggal (Selesai)
                     </label>
                     <input type="date" name="end_date" id="filter_end_date" value="{{ request('end_date') }}"
                         class="w-full text-xs rounded-lg py-2 px-3 border-[0.5px] border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 bg-white">
@@ -59,16 +59,21 @@
                 {{-- 3. Garage Type --}}
                 <div>
                     <label for="filter_garage_type" class="block text-xs font-medium text-gray-700 mb-1">
-                        Garage Type
+                        Tipe Garasi
                     </label>
                     <div class="relative">
                         <select name="garage_type" id="filter_garage_type"
                             class="w-full appearance-none text-xs rounded-lg py-2 pl-3 pr-8 border-[0.5px] border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 bg-white">
-                            <option value="">All Garage Types</option>
+                            <option value="">Semua Tipe Garasi</option>
                             @foreach ($garageCategories as $category)
                                 <option value="{{ $category }}"
                                     {{ request('garage_type') == $category ? 'selected' : '' }}>
-                                    {{ $category }}
+                                    {{ match ($category) {
+                                        'Bike' => 'Garasi Sepeda (Bike)',
+                                        'Car' => 'Garasi Mobil (Car)',
+                                        'Electric Car' => 'Garasi Mobil Listrik (Electric Car)',
+                                        default => $category,
+                                    } }}
                                 </option>
                             @endforeach
                         </select>
@@ -86,12 +91,12 @@
                 @if ($isAdmin)
                     <div>
                         <label for="filter_renter_id" class="block text-xs font-medium text-gray-700 mb-1">
-                            Renter
+                            Penyewa
                         </label>
                         <div class="relative">
                             <select name="renter_id" id="filter_renter_id"
                                 class="w-full appearance-none text-xs rounded-lg py-2 pl-3 pr-8 border-[0.5px] border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 bg-white">
-                                <option value="">All Renters</option>
+                                <option value="">Semua Penyewa</option>
                                 @foreach ($renters as $renter)
                                     <option value="{{ $renter->id }}"
                                         {{ request('renter_id') == $renter->id ? 'selected' : '' }}>
@@ -119,14 +124,19 @@
                         Reset
                     </a>
                 @endif
+
                 <button type="submit"
-                    class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-xs font-medium rounded-lg shadow-sm transition">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 mr-1.5" fill="none"
-                        viewBox="0 0 24 24" stroke="currentColor">
+                    class="px-4 py-2 text-xs font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition shadow-sm">
+                    Terapkan Filter
+                </button>
+
+                <button type="button" onclick="window.print()"
+                    class="px-3.5 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg transition flex items-center gap-1.5 shadow-sm">
+                    <svg class="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                     </svg>
-                    Apply Filter
+                    <span>Cetak Laporan</span>
                 </button>
             </div>
         </div>

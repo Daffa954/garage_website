@@ -1,4 +1,4 @@
- @props([])
+@props([])
 
 <div
     x-data="{ selectedCategory: @js(old('category', '')) }"
@@ -18,10 +18,10 @@
         <div class="flex items-center justify-between px-6 py-5 border-b border-gray-200">
             <div>
                 <h2 class="text-lg font-semibold text-gray-800">
-                    Add New Garage
+                    Buat Garasi Baru Secara Berkelompok
                 </h2>
                 <p class="text-sm text-gray-500 mt-1">
-                    Enter your garage information below.
+                    Masukkan informasi spesifikasi garasi di bawah ini.
                 </p>
             </div>
 
@@ -38,18 +38,10 @@
         <form action="{{ route('api.garage.store') }}" method="POST" class="p-6">
             @csrf
 
-            {{-- Garage Name --}}
-            <x-commons.input
-                name="name"
-                label="Garage Name"
-                placeholder="e.g. Garage A"
-                :required="true"
-            />
-
             {{-- Category --}}
             <div class="mb-5">
                 <label for="category" class="block text-sm font-medium text-gray-700 mb-2">
-                    Garage Category
+                    Tipe Garasi
                 </label>
 
                 <select
@@ -59,13 +51,10 @@
                     required
                     class="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition"
                 >
-                    <option value="">Select Category</option>
-
-                    @foreach (\App\Enums\VehicleCategory::cases() as $category)
-                        <option value="{{ $category->value }}">
-                            {{ $category->value }}
-                        </option>
-                    @endforeach
+                    <option value="">-- Pilih Tipe Garasi --</option>
+                    <option value="Bike">Garasi Sepeda (Kode S - Sepeda & Sepeda Motor)</option>
+                    <option value="Car">Garasi Mobil (Kode C - Mobil Bensin)</option>
+                    <option value="Electric Car">Garasi Mobil Listrik (Kode E - Dengan Stasiun Cas)</option>
                 </select>
 
                 @error('category')
@@ -73,12 +62,24 @@
                 @enderror
             </div>
 
+            {{-- Quantity (Batch Creation) --}}
+            <x-commons.input
+                name="quantity"
+                label="Jumlah Garasi yang Dibuat (Maksimum 999)"
+                type="number"
+                placeholder="Contoh: 10"
+                min="1"
+                max="999"
+                value="1"
+                :required="true"
+            />
+
             {{-- Daily Rental Price --}}
             <x-commons.input
                 name="price"
-                label="Daily Rental Price (Rp)"
+                label="Harga Sewa Harian (Rp)"
                 type="number"
-                placeholder="e.g. 50000"
+                placeholder="Contoh: 50000"
                 min="0"
                 step="1000"
                 :required="true"
@@ -88,9 +89,9 @@
             <div x-show="selectedCategory === 'Electric Car'" x-cloak>
                 <x-commons.input
                     name="price_kwh"
-                    label="Electricity Price per kWh (Rp)"
+                    label="Harga Isi Listrik per kWh (Rp)"
                     type="number"
-                    placeholder="e.g. 2500"
+                    placeholder="Contoh: 2500"
                     min="0"
                     step="100"
                     ::required="selectedCategory === 'Electric Car'"
@@ -105,14 +106,14 @@
                     @click="showCreateModal = false"
                     class="px-4 py-2.5 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition"
                 >
-                    Cancel
+                    Batal
                 </button>
 
                 <button
                     type="submit"
-                    class="px-5 py-2.5 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition"
+                    class="px-5 py-2.5 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition shadow-sm"
                 >
-                    Create Garage
+                    Simpan Garasi
                 </button>
             </div>
         </form>

@@ -1,8 +1,9 @@
- @php
-        $role = session('user_role');
-        $isAdmin = $role === 'admin';
-        $isRenter = $role === 'user';
-    @endphp
+@php
+    $role = session('user_role');
+    $isAdmin = $role === 'admin';
+    $isRenter = $role === 'user';
+@endphp
+
 <div
     x-show="showDetailModal"
     x-cloak
@@ -24,10 +25,10 @@
                 </div>
                 <div>
                     <h2 class="text-lg font-bold text-gray-800">
-                        Rental Booking Details
+                        Rincian Transaksi Persewaan Garasi
                     </h2>
                     <p class="text-xs text-gray-500 mt-0.5">
-                        Created on <span x-text="formatDate(selectedRent?.created_at)"></span>
+                        Dibuat pada <span x-text="formatDate(selectedRent?.created_at)"></span>
                     </p>
                 </div>
             </div>
@@ -48,27 +49,26 @@
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {{-- Garage Card --}}
                 <div class="p-4 rounded-xl border border-gray-200 bg-gray-50/50">
-                    <span class="text-xs font-semibold uppercase tracking-wider text-gray-400">Garage</span>
-                    <h4 class="font-bold text-gray-800 mt-1" x-text="selectedRent?.garage?.name"></h4>
+                    <span class="text-xs font-semibold uppercase tracking-wider text-gray-400">Garasi</span>
+                    <h4 class="font-bold text-gray-800 mt-1 font-mono text-base" x-text="selectedRent?.garage?.garage_code"></h4>
                     <div class="flex items-center gap-2 mt-1 text-xs text-gray-500">
-                        <span class="font-mono text-green-700 bg-green-50 px-1.5 py-0.5 rounded" x-text="selectedRent?.garage?.garage_code"></span>
-                        <span x-text="selectedRent?.garage?.category"></span>
+                        <span x-text="selectedRent?.garage?.category === 'Bike' ? 'Garasi Sepeda' : (selectedRent?.garage?.category === 'Car' ? 'Garasi Mobil' : 'Garasi Mobil Listrik')"></span>
                     </div>
                 </div>
 
                 {{-- Vehicle Card --}}
                 <div class="p-4 rounded-xl border border-gray-200 bg-gray-50/50">
-                    <span class="text-xs font-semibold uppercase tracking-wider text-gray-400">Vehicle</span>
+                    <span class="text-xs font-semibold uppercase tracking-wider text-gray-400">Kendaraan</span>
                     <h4 class="font-bold text-gray-800 mt-1" x-text="selectedRent?.vehicle?.brand"></h4>
                     <div class="flex items-center gap-2 mt-1 text-xs text-gray-500">
-                        <span class="font-semibold text-gray-700" x-text="selectedRent?.vehicle?.license_plate || 'No Plate'"></span>
+                        <span class="font-semibold text-gray-700" x-text="selectedRent?.vehicle?.license_plate || 'Tanpa Plat'"></span>
                         <span x-text="selectedRent?.vehicle?.category"></span>
                     </div>
                 </div>
 
                 {{-- Renter Card --}}
                 <div class="p-4 rounded-xl border border-gray-200 bg-gray-50/50">
-                    <span class="text-xs font-semibold uppercase tracking-wider text-gray-400">Renter</span>
+                    <span class="text-xs font-semibold uppercase tracking-wider text-gray-400">Penyewa</span>
                     <h4 class="font-bold text-gray-800 mt-1" x-text="selectedRent?.renter?.name"></h4>
                     <p class="text-xs text-gray-500 mt-1 truncate" x-text="selectedRent?.renter?.email"></p>
                 </div>
@@ -77,12 +77,12 @@
             {{-- 2. Rental Duration & Overall Billing Summary --}}
             <div class="p-4 rounded-xl bg-gradient-to-r from-green-50/80 to-emerald-50/80 border border-green-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
-                    <span class="text-xs font-semibold uppercase tracking-wider text-green-700">Contract Duration</span>
+                    <span class="text-xs font-semibold uppercase tracking-wider text-green-700">Durasi Kontrak Sewa</span>
                     <div class="text-sm font-bold text-gray-900 mt-1">
                         <span x-text="formatDate(selectedRent?.start_date)"></span>
-                        <span class="text-gray-400 mx-1">→</span>
+                        <span class="text-gray-400 mx-1">s.d.</span>
                         <span x-text="formatDate(selectedRent?.end_date)"></span>
-                        <span class="ml-1 text-xs font-medium text-green-600" x-text="'(' + (selectedRent?.total_day || 0) + ' days)'"></span>
+                        <span class="ml-1 text-xs font-medium text-green-600" x-text="'(' + (selectedRent?.total_day || 0) + ' hari)'"></span>
                     </div>
                 </div>
 
@@ -91,18 +91,18 @@
                     <template x-if="evChargeTotal > 0">
                         <div class="space-y-0.5 mb-1.5 text-xs">
                             <div class="flex sm:justify-end gap-2 text-gray-600">
-                                <span>Garage Rent:</span>
+                                <span>Sewa Garasi:</span>
                                 <span class="font-semibold text-gray-800" x-text="formatCurrency(selectedRent?.total_price)"></span>
                             </div>
                             <div class="flex sm:justify-end gap-2 text-emerald-700">
-                                <span>⚡ EV Charge:</span>
+                                <span>⚡ Biaya Cas Listrik:</span>
                                 <span class="font-semibold text-emerald-700" x-text="formatCurrency(evChargeTotal)"></span>
                             </div>
                         </div>
                     </template>
 
                     <div>
-                        <span class="text-xs font-semibold uppercase tracking-wider text-green-800">Total Semua Transaksi</span>
+                        <span class="text-xs font-semibold uppercase tracking-wider text-green-800">Total Biaya Pelunasan</span>
                         <div class="text-xl font-black text-green-950 mt-0.5" x-text="formatCurrency(grandTotal)"></div>
                     </div>
                 </div>
@@ -111,7 +111,7 @@
             {{-- Optional Note --}}
             <template x-if="selectedRent?.note">
                 <div class="p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-900">
-                    <span class="font-bold">Booking Note:</span>
+                    <span class="font-bold">Catatan Pemesanan:</span>
                     <span x-text="selectedRent?.note"></span>
                 </div>
             </template>
@@ -120,9 +120,9 @@
             <div>
                 <div class="flex items-center justify-between mb-3">
                     <h3 class="text-sm font-bold text-gray-800 flex items-center gap-2">
-                        Period Breakdown & Details (<span x-text="(selectedRent?.rent_details || selectedRent?.rentDetails || []).length"></span>)
+                        Rincian Periode Sewa & Perpanjangan (<span x-text="(selectedRent?.rent_details || selectedRent?.rentDetails || []).length"></span>)
                     </h3>
-                    <span class="text-xs text-gray-400">Rules: Monthly = 25× Daily rate</span>
+                    <span class="text-xs text-gray-400">Aturan: Bulanan = 25× Tarif Harian</span>
                 </div>
 
                 <div class="border border-gray-200 rounded-xl overflow-hidden shadow-sm">
@@ -130,10 +130,10 @@
                         <thead class="bg-gray-50 border-b border-gray-200 text-gray-500 uppercase font-semibold">
                             <tr>
                                 <th class="px-4 py-3">#</th>
-                                <th class="px-4 py-3">Type</th>
-                                <th class="px-4 py-3">Date Range</th>
-                                <th class="px-4 py-3">Days</th>
-                                <th class="px-4 py-3 text-right">Period Price</th>
+                                <th class="px-4 py-3">Tipe</th>
+                                <th class="px-4 py-3">Rentang Tanggal</th>
+                                <th class="px-4 py-3">Jumlah Hari</th>
+                                <th class="px-4 py-3 text-right">Biaya Periode</th>
                                 <th class="px-4 py-3 text-center">Status</th>
                             </tr>
                         </thead>
@@ -144,26 +144,26 @@
                                     <td class="px-4 py-3">
                                         <span
                                             :class="detail.type === 'monthly' ? 'bg-green-100 text-green-700' : 'bg-emerald-100 text-emerald-700'"
-                                            class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold capitalize"
-                                            x-text="detail.type"
+                                            class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold"
+                                            x-text="detail.type === 'monthly' ? 'Bulanan' : 'Harian'"
                                         ></span>
                                     </td>
                                     <td class="px-4 py-3 font-medium text-gray-800">
                                         <span x-text="formatDate(detail.start_date)"></span>
-                                        <span class="text-gray-400 mx-1">to</span>
+                                        <span class="text-gray-400 mx-1">s.d.</span>
                                         <span x-text="formatDate(detail.end_date)"></span>
                                     </td>
-                                    <td class="px-4 py-3 text-gray-600 font-semibold" x-text="detail.total_day + ' days'"></td>
+                                    <td class="px-4 py-3 text-gray-600 font-semibold" x-text="detail.total_day + ' hari'"></td>
                                     <td class="px-4 py-3 text-right font-bold text-gray-900" x-text="formatCurrency(detail.total_price)"></td>
                                     <td class="px-4 py-3 text-center">
                                         <template x-if="detail.is_extension">
                                             <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-purple-100 text-purple-700 border border-purple-200">
-                                                Extension
+                                                Perpanjangan
                                             </span>
                                         </template>
                                         <template x-if="!detail.is_extension">
                                             <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-gray-100 text-gray-600">
-                                                Initial Booking
+                                                Sewa Awal
                                             </span>
                                         </template>
                                     </td>
@@ -172,7 +172,7 @@
                             <template x-if="!(selectedRent?.rent_details || selectedRent?.rentDetails || []).length">
                                 <tr>
                                     <td colspan="6" class="px-4 py-6 text-center text-gray-400">
-                                        No period details recorded.
+                                        Tidak ada data rincian periode.
                                     </td>
                                 </tr>
                             </template>
@@ -184,7 +184,7 @@
             {{-- 4. Payment Receipts (rent_payments) --}}
             <div>
                 <h3 class="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
-                     Payment Receipts (<span x-text="(selectedRent?.payments || []).length"></span>)
+                    Bukti Pelunasan Biaya (<span x-text="(selectedRent?.payments || []).length"></span>)
                 </h3>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -193,11 +193,11 @@
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-center gap-2">
                                     <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-green-50 text-green-700">
-                                        Receipt #<span x-text="pIdx + 1"></span>
+                                        Bukti Bayar #<span x-text="pIdx + 1"></span>
                                     </span>
                                     <span class="text-[11px] text-gray-400" x-text="formatDate(payment.created_at)"></span>
                                 </div>
-                                <p class="text-xs text-gray-600 mt-1 truncate" x-text="payment.remarks || 'Payment receipt transfer proof'"></p>
+                                <p class="text-xs text-gray-600 mt-1 truncate" x-text="payment.remarks || 'Bukti transfer pelunasan biaya'"></p>
                             </div>
 
                             <a
@@ -205,7 +205,7 @@
                                 target="_blank"
                                 class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-green-700 bg-green-50 hover:bg-green-600 hover:text-white rounded-lg transition shrink-0"
                             >
-                                <span>Open</span>
+                                <span>Buka Bukti</span>
                                 <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                                 </svg>
@@ -216,7 +216,7 @@
 
                 <template x-if="!(selectedRent?.payments || []).length">
                     <div class="p-4 bg-gray-50 border border-gray-200 rounded-xl text-center text-xs text-gray-400">
-                        No payment receipts recorded for this booking.
+                        Belum ada bukti pelunasan biaya yang tercatat.
                     </div>
                 </template>
             </div>
@@ -226,7 +226,7 @@
                 <div>
                     <div class="flex items-center justify-between mb-3">
                         <h3 class="text-sm font-bold text-emerald-800 flex items-center gap-2">
-                            <span>⚡</span> EV Charging Transactions & Proof
+                            <span>⚡</span> Pengisian Mobil Listrik & Bukti Cas
                         </h3>
                         <span class="text-xs font-semibold text-emerald-700 bg-emerald-100 px-2.5 py-0.5 rounded-full" x-text="'Total: ' + formatCurrency(evChargeTotal)"></span>
                     </div>
@@ -237,17 +237,17 @@
                                 <div>
                                     <div class="flex items-center gap-2">
                                         <span class="font-bold text-emerald-900 text-sm">
-                                            Battery Level: <span class="text-emerald-700" x-text="Number(charge.current_battery).toFixed(0) + '%'"></span>
+                                            Kapasitas Baterai Awal: <span class="text-emerald-700" x-text="Number(charge.current_battery).toFixed(0) + '%'"></span>
                                         </span>
                                         <span class="text-gray-400">&bull;</span>
                                         <span class="text-gray-500" x-text="formatDate(charge.created_at)"></span>
                                     </div>
-                                    <p class="text-emerald-800 text-xs mt-1" x-text="charge.note || 'Electric vehicle charging session.'"></p>
+                                    <p class="text-emerald-800 text-xs mt-1" x-text="charge.note || 'Pengisian listrik hingga penuh (100%).'"></p>
                                 </div>
 
                                 <div class="flex items-center gap-3 sm:text-right shrink-0">
                                     <div class="text-left sm:text-right">
-                                        <span class="text-[10px] text-gray-500 block uppercase font-medium">Charge Cost</span>
+                                        <span class="text-[10px] text-gray-500 block uppercase font-medium">Biaya Cas</span>
                                         <div class="font-extrabold text-emerald-700 text-sm" x-text="formatCurrency(charge.price_charge)"></div>
                                     </div>
 
@@ -258,7 +258,7 @@
                                             target="_blank"
                                             class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-800 bg-emerald-100 hover:bg-emerald-700 hover:text-white rounded-lg transition shadow-sm"
                                         >
-                                            <span>Bukti Cas</span>
+                                            <span>Lihat Bukti Cas</span>
                                             <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                                             </svg>
@@ -280,7 +280,7 @@
                 @click="showDetailModal = false"
                 class="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition"
             >
-                Close
+                Tutup
             </button>
 
             @if ($isAdmin)
@@ -288,9 +288,9 @@
                     <button
                         type="button"
                         @click="showDetailModal = false; openExtend(selectedRent)"
-                        class="inline-flex items-center gap-1.5 px-4 py-2 bg-green-600 text-white text-sm font-semibold rounded-lg hover:bg-green-700 transition"
+                        class="inline-flex items-center gap-1.5 px-4 py-2 bg-green-600 text-white text-sm font-semibold rounded-lg hover:bg-green-700 transition shadow-sm"
                     >
-                        <span>+ Extend Rental Contract</span>
+                        <span>+ Perpanjang Status Sewa</span>
                     </button>
                 </template>
             @endif

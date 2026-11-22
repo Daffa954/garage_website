@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>@yield('title', config('app.name', 'Laravel'))</title>
+    <title>@yield('title', 'Sistem Persewaan Garasi')</title>
 
     @fonts
 
@@ -36,7 +36,7 @@
             @if (session('success'))
                 Swal.fire({
                     icon: 'success',
-                    title: 'Success!',
+                    title: 'Berhasil!',
                     text: "{{ session('success') }}",
                     timer: 3000,
                     showConfirmButton: false
@@ -46,7 +46,7 @@
             @if (session('error'))
                 Swal.fire({
                     icon: 'error',
-                    title: 'Fail!',
+                    title: 'Gagal!',
                     text: "{{ session('error') }}"
                 });
             @endif
@@ -54,7 +54,7 @@
             @if ($errors->any())
                 Swal.fire({
                     icon: 'error',
-                    title: 'Validation Error!',
+                    title: 'Kesalahan Validasi!',
                     html: `{!! implode('<br>', $errors->all()) !!}`
                 });
             @endif
