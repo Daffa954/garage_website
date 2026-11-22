@@ -23,15 +23,9 @@ class GarageController extends Controller
      */
     public function index()
     {
-        $garages = Garage::with(['activeRent.renter'])->latest()->paginate(10);
+        $data = $this->garageService->getGarageIndexData(session('user_id'));
 
-        $vehicles = session()->has('user_id')
-            ? Vehicle::where('owner_id', session('user_id'))
-                ->whereDoesntHave('rents.garage', fn($q) => $q->where('status', '!=', 'available'))
-                ->get()
-            : collect();
-
-        return view('garage', compact('garages', 'vehicles'));
+        return view('garage', $data);
     }
 
     /**

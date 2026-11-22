@@ -4,11 +4,32 @@ namespace App\Services;
 
 use App\Models\Category;
 use App\Models\Garage;
+use App\Models\Vehicle;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
 
 class GarageService
 {
+    /**
+     * Get garage listing with active rents and user's available vehicles for rent modal.
+     *
+     * @param int|null $userId
+     * @param int $perPage
+     * @return array{garages: \Illuminate\Contracts\Pagination\LengthAwarePaginator, vehicles: \Illuminate\Support\Collection}
+     */
+    public function getGarageIndexData(?int $userId = null, int $perPage = 10): array
+    {
+        
+        $garages = Garage::with(['activeRent.renter'])->latest()->paginate($perPage);
+
+        $vehicles = $userId
+            ? Vehicle::where('owner_id', $userId)
+                ->whereDoesntHave('rents.garage', fn($q) => $q->where('status', '!=', 'available'))
+                ->get()
+            : collect();
+
+        return compact('garages', 'vehicles');
+    }
 
     /**
      * Create a new garage facility with an auto-generated unique code.

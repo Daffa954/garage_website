@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\EvCharge;
 use App\Models\Garage;
 use App\Models\Rent;
 use App\Models\User;
@@ -10,6 +9,7 @@ use App\Models\Vehicle;
 use App\Services\RentService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use InvalidArgumentException;
 
 class RentController extends Controller
 {
@@ -20,13 +20,10 @@ class RentController extends Controller
 
     /**
      * Display a listing of rental transactions and rental reports.
-     * Supports filtering by:
-     * - Date Range (start_date and end_date, looping through rent_details to find the latest end_date)
-     * - Garage Type (Per Tipe Garasi)
-     * - Renter (Per Penyewa - for admin)
+     * Delegates filtering, metric aggregation, and querying to RentService.
      *
      * @param Request $request
-     * @return \Illuminate\View\View
+     * @return \Illuminate\View\View|\Illuminate\Http\RedirectResponse
      */
     public function index(Request $request)
     {
@@ -34,70 +31,20 @@ class RentController extends Controller
         $userId = session('user_id');
         $isAdmin = $role === 'admin';
 
-        $baseQuery = Rent::query();
-        if (!$isAdmin) {
-            $baseQuery->where('renter_id', $userId);
-        }
+        $filters = array_filter($request->only([
+            'start_date',
+            'end_date',
+            'garage_type',
+            'renter_id',
+        ]), fn($val) => $val !== null && $val !== '');
 
-        $totalCount = (clone $baseQuery)->count();
-        $activeCount = (clone $baseQuery)->whereDate('end_date', '>=', today())->count();
-        $completedCount = (clone $baseQuery)->whereDate('end_date', '<', today())->count();
+        $reportData = $this->rentService->getRentalReportData(
+            filters: $filters,
+            userId: $userId,
+            isAdmin: $isAdmin
+        );
 
-        // Build report query with active filters
-        $query = Rent::with(['renter', 'garage', 'vehicle', 'rentDetails', 'payments', 'evCharges'])
-            ->when(!$isAdmin, fn($q) => $q->where('renter_id', $userId));
-
-        // 1. Filter by Garage Type (Per Tipe Garasi)
-        if ($request->filled('garage_type')) {
-            $query->whereHas('garage', fn($g) => $g->where('category', $request->input('garage_type')));
-        }
-
-        // 2. Filter by Renter (Per Penyewa)
-        if ($isAdmin && $request->filled('renter_id')) {
-            $query->where('renter_id', $request->input('renter_id'));
-        }
-
-        // 3. Filter by Date Range (start_date & end_date) directly in database
-        if ($request->filled('start_date')) {
-            $query->whereDate('start_date', '>=', $request->input('start_date'));
-        }
-
-        if ($request->filled('end_date')) {
-            $query->whereDate('end_date', '<=', $request->input('end_date'));
-        }
-
-        // Aggregate Report Metrics across all matching records
-        $reportCount = (clone $query)->count();
-        $reportTotalDays = (clone $query)->sum('total_day');
-        $reportRentalRevenue = (clone $query)->sum('total_price');
-
-        $filteredRentIds = (clone $query)->pluck('id');
-        $reportEvRevenue = EvCharge::whereIn('rent_id', $filteredRentIds)->sum('price_charge');
-        $reportGrandTotal = $reportRentalRevenue + $reportEvRevenue;
-
-        $isFiltered = $request->anyFilled(['start_date', 'end_date', 'garage_type', 'renter_id']);
-
-        // Paginate results with persistent query string for pagination links
-        $rents = (clone $query)->latest()->paginate(10)->withQueryString();
-
-        $garageCategories = ['Car', 'Electric Car', 'Motor Cycle', 'Bike'];
-        $renters = $isAdmin ? User::orderBy('name')->get(['id', 'name', 'email']) : collect();
-
-        return view('rental', compact(
-            'rents',
-            'isAdmin',
-            'totalCount',
-            'activeCount',
-            'completedCount',
-            'reportCount',
-            'reportTotalDays',
-            'reportRentalRevenue',
-            'reportEvRevenue',
-            'reportGrandTotal',
-            'isFiltered',
-            'garageCategories',
-            'renters'
-        ));
+        return view('rental', array_merge(['isAdmin' => $isAdmin], $reportData));
     }
 
     /**

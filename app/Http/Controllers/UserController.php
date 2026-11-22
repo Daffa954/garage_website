@@ -2,24 +2,24 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
+use App\Services\UserService;
 use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
+    public function __construct(
+        protected UserService $userService
+    ) {
+    }
+
     /**
      * Display a listing of registered users for admin verification.
      */
     public function index()
     {
-        $baseQuery = User::where('role', 'user');
-        $totalUsers = (clone $baseQuery)->count();
-        $verifiedUsers = (clone $baseQuery)->where('is_verified', true)->count();
-        $unverifiedUsers = (clone $baseQuery)->where('is_verified', false)->count();
+        $data = $this->userService->getUserIndexData();
 
-        $users = $baseQuery->latest()->paginate(10);
-
-        return view('admin.users', compact('users', 'totalUsers', 'verifiedUsers', 'unverifiedUsers'));
+        return view('admin.users', $data);
     }
 
     /**
@@ -27,9 +27,7 @@ class UserController extends Controller
      */
     public function toggleVerify(int $id)
     {
-        $user = User::findOrFail($id);
-        $user->is_verified = !$user->is_verified;
-        $user->save();
+        $user = $this->userService->toggleVerify($id);
 
         $status = $user->is_verified ? 'verified' : 'unverified';
 
