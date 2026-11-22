@@ -294,30 +294,4 @@ class RentService
             'renters' => $renters,
         ];
     }
-
-    /**
-     * Calculate rental periods based on daily and monthly pricing rules.
-     * Delegates to the Rent model domain behavior.
-     *
-     * A one-month calculation always follows the number of days in the month where the booking started.
-     * - Monthly price = 25 * daily garage price.
-     * - Daily max = number of days in the starting month - 1.
-     *
-     * @param Carbon $startDate Starting date of the rental.
-     * @param Carbon $endDate Ending date of the rental.
-     * @param int|float $dailyPrice Daily garage rental price.
-     * @return array<int, array{type: string, start_date: string, end_date: string, total_day: int, total_price: int|float}>
-     */
-    private function calculatePeriods(
-        Carbon $startDate,
-        Carbon $endDate,
-        int|float $dailyPrice
-    ): array {
-        $rent = new Rent([
-            'start_date' => $startDate,
-            'end_date' => $endDate,
-        ]);
-
-        return $rent->calculatePeriods($dailyPrice);
-    }
 }
