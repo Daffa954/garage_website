@@ -14,7 +14,12 @@
         },
         get matchingVehicles() {
             if (!selectedGarage) return [];
-            return this.allVehicles.filter(v => v.category === selectedGarage.category);
+            return this.allVehicles.filter(v => {
+                if (v.category === selectedGarage.category) return true;
+                // Electric Car can also park in a regular Car garage (no charging)
+                if (v.category === 'Electric Car' && selectedGarage.category === 'Car') return true;
+                return false;
+            });
         }
     }"
     x-init="$watch('selectedGarage', () => { selectedVehicleId = ''; })"
@@ -55,6 +60,7 @@
             @csrf
 
             <input type="hidden" name="garage_id" :value="selectedGarage ? selectedGarage.id : ''">
+            <input type="hidden" name="type" :value="selectedGarage ? selectedGarage.category : ''">
 
             {{-- Garage Info Summary Box --}}
             <div class="mb-5 rounded-lg bg-gray-50 p-4 border border-gray-200 text-sm">
@@ -82,7 +88,7 @@
 
                 {{-- Alert when user has no matching vehicles for the selected garage category --}}
                 <div x-show="matchingVehicles.length === 0" class="p-3.5 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
-                    <span>You do not have any registered vehicle in the <strong x-text="selectedGarage ? selectedGarage.category : ''"></strong> category.</span>
+                    <span>You do not have any available vehicle in the <strong x-text="selectedGarage ? selectedGarage.category : ''"></strong> category.</span>
                     <a href="{{ route('vehicles.index') }}" class="underline font-semibold hover:text-amber-900 block mt-1">
                         + Register a matching vehicle
                     </a>
@@ -99,7 +105,7 @@
                     >
                         <option value="">-- Choose Vehicle --</option>
                         <template x-for="v in matchingVehicles" :key="v.id">
-                            <option :value="v.id" x-text="`${v.brand} (${v.license_plate ? v.license_plate : 'No Plate'})`"></option>
+                            <option :value="v.id" x-text="`${v.brand} (${v.license_plate ? v.license_plate : 'No Plate'})${selectedGarage?.category === 'Car' && v.category === 'Electric Car' ? ' - EV (No Charging)' : ''}`"></option>
                         </template>
                     </select>
                 </div>
@@ -157,7 +163,7 @@
 
                     <div class="mb-3">
                         <label for="current_battery" class="block text-xs font-medium text-emerald-900 mb-1">
-                            Current Battery Level (%) <span class="text-red-500 font-bold">*</span>
+                            Current Battery Level (%) <span class="text-gray-400 font-normal">(100% = full, no charging fee)</span>
                         </label>
                         <input
                             type="number"
@@ -168,9 +174,12 @@
                             max="100"
                             step="0.01"
                             placeholder="e.g. 45"
-                            required
                             class="w-full rounded-lg border border-emerald-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-emerald-500/20 transition"
                         >
+                        <div x-show="Number(currentBattery) >= 100" class="mt-2 text-xs text-emerald-800 bg-emerald-100/80 px-2.5 py-1.5 rounded-md flex items-center gap-1.5">
+                            <span>✓</span>
+                            <span>Battery is full (100%). No charging is needed and no charging fee will be billed.</span>
+                        </div>
                         @error('ev_charge.current_battery')
                             <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                         @enderror
@@ -238,7 +247,7 @@
 
                 <button
                     type="submit"
-                    :disabled="matchingVehicles.length === 0 || (isElectric && (currentBattery === '' || currentBattery === null))"
+                    :disabled="matchingVehicles.length === 0"
                     class="px-5 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
                 >
                     Confirm & Rent

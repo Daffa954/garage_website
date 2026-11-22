@@ -26,7 +26,7 @@
                 <div>
                     <p class="text-sm font-medium text-gray-500">Total Registered Vehicles</p>
                     <h2 class="text-3xl font-bold text-gray-800 mt-2">
-                        {{ $vehicles->count() }}
+                        {{ $vehicles->total() }}
                     </h2>
                     <p class="text-xs text-gray-400 mt-1">Vehicles registered to your account</p>
                 </div>
@@ -85,7 +85,7 @@
                         @foreach ($vehicles as $vehicle)
                             <tr class="hover:bg-gray-50 transition">
                                 <td class="px-6 py-4 text-gray-500">
-                                    {{ $loop->iteration }}
+                                    {{ $vehicles->firstItem() + $loop->index }}
                                 </td>
 
                                 <td class="px-6 py-4 font-medium text-gray-800">
@@ -112,6 +112,11 @@
 
                     </x-commons.datatable>
 
+                    @if ($vehicles->hasPages())
+                        <div class="px-6 py-4 border-t border-gray-200">
+                            {{ $vehicles->links() }}
+                        </div>
+                    @endif
                 </div>
             @endif
         </div>

@@ -103,11 +103,11 @@ class RentService
                 ]);
             }
 
-            // 7. Create EV charging transaction if required
-            if (
-                $garage->category === 'Electric Car' &&
-                !empty($data['ev_charge'])
-            ) {
+            // 7. Create EV charging transaction if required (only if electric vehicle and battery < 100%)
+            $isElectricVehicle = $rent->vehicle instanceof \App\Models\ElectricCar || $rent->vehicle?->isElectric();
+            $batteryNeedsCharge = !empty($data['ev_charge']) && !$rent->vehicle?->isBatteryFull((float) ($data['ev_charge']['current_battery'] ?? 100));
+
+            if ($garage->category === 'Electric Car' && $isElectricVehicle && $batteryNeedsCharge) {
                 $this->evChargeService->create(
                     $rent,
                     $data['ev_charge']
@@ -120,6 +120,73 @@ class RentService
             ]);
 
             return $rent;
+        });
+    }
+
+    /**
+     * Extend an existing rental contract with additional period details and payment receipt.
+     *
+     * @param Rent $rent The existing rental transaction to extend.
+     * @param array{
+     *     new_end_date: string,
+     *     url_payment_receipt?: string,
+     *     note?: string
+     * } $data Extension details.
+     * @return Rent The updated Rent model instance.
+     *
+     * @throws InvalidArgumentException If the new end date is not after the current end date.
+     */
+    public function extend(Rent $rent, array $data): Rent
+    {
+        return DB::transaction(function () use ($rent, $data) {
+            $currentEndDate = Carbon::parse($rent->end_date)->startOfDay();
+            $newEndDate = Carbon::parse($data['new_end_date'])->startOfDay();
+
+            if ($newEndDate->lte($currentEndDate)) {
+                throw new InvalidArgumentException(
+                    'New end date must be later than the current rental end date.'
+                );
+            }
+
+            // Calculate extension periods using the same daily & monthly pricing rules
+            $periods = $this->calculatePeriods(
+                $currentEndDate,
+                $newEndDate,
+                $rent->garage->price
+            );
+
+            $additionalDays = (int) $currentEndDate->diffInDays($newEndDate);
+            $additionalPrice = array_sum(array_column($periods, 'total_price'));
+
+            // Create rental extension period details
+            foreach ($periods as $period) {
+                $rent->rentDetails()->create([
+                    ...$period,
+                    'is_extension' => true,
+                ]);
+            }
+
+            // Store extension payment receipt if uploaded
+            if (!empty($data['url_payment_receipt'])) {
+                $rent->payments()->create([
+                    'url_payment_receipt' => $data['url_payment_receipt'],
+                    'remarks' => $data['note'] ?? 'Rental extension payment',
+                ]);
+            }
+
+            // Update main rent record with new end date, total days, and total price
+            $rent->update([
+                'end_date' => $newEndDate->toDateString(),
+                'total_day' => $rent->total_day + $additionalDays,
+                'total_price' => $rent->total_price + $additionalPrice,
+            ]);
+
+            // Ensure garage status remains occupied
+            $rent->garage->update([
+                'status' => 'used',
+            ]);
+
+            return $rent->fresh(['rentDetails', 'payments', 'garage', 'vehicle', 'renter']);
         });
     }
 

@@ -38,7 +38,7 @@
             <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
                 <div class="px-6 py-4 border-b border-gray-200">
                     <h2 class="font-semibold text-gray-800">
-                        {{ $isAdmin ? 'Garage List' : 'Available Garages' }}
+                        {{ $isAdmin ? 'Garage List' : 'All Garages' }}
                     </h2>
                 </div>
 
@@ -61,7 +61,7 @@
                         @foreach ($garages as $garage)
                             <tr class="hover:bg-gray-50 transition">
                                 <td class="px-6 py-4 text-gray-500">
-                                    {{ $loop->iteration }}
+                                    {{ $garages->firstItem() + $loop->index }}
                                 </td>
 
                                 <td class="px-6 py-4 font-medium text-gray-800">
@@ -83,12 +83,22 @@
                                     {{ $garage->price_kwh !== null ? 'Rp ' . number_format($garage->price_kwh, 0, ',', '.') : '-' }}
                                 </td>
 
-                                <td class="px-6 py-4 text-gray-600">
-                                    {{ $garage->status ?? '-' }}
+                                <td class="px-6 py-4">
+                                    @if ($garage->status === 'available')
+                                        <span
+                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
+                                            Available
+                                        </span>
+                                    @else
+                                        <span
+                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-700">
+                                            Occupied
+                                        </span>
+                                    @endif
                                 </td>
 
                                 <td class="px-6 py-4 text-gray-600">
-                                    {{ $garage->activeRent?->renter?->name ?? '-' }}
+                                    {{ $garage->status !== 'available' ? ($garage->activeRent?->renter?->name ?? '-') : '-' }}
                                 </td>
 
                                 <td class="px-6 py-4 text-center">
@@ -99,12 +109,21 @@
                                             Rent
                                         </button>
                                     @else
-                                        <span class="text-gray-400 text-sm">Unavailable</span>
+                                        <span
+                                            class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium text-gray-400 bg-gray-50 border border-gray-200 cursor-not-allowed">
+                                            Unavailable
+                                        </span>
                                     @endif
                                 </td>
                             </tr>
                         @endforeach
                     </x-commons.datatable>
+
+                    @if ($garages->hasPages())
+                        <div class="px-6 py-4 border-t border-gray-200">
+                            {{ $garages->links() }}
+                        </div>
+                    @endif
                 @endif
             </div>
         @endif

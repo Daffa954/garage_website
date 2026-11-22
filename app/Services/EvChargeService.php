@@ -38,7 +38,9 @@ class EvChargeService
             $chargeData = $dataOrVehicle;
         }
 
-        if (!$vehicle || $vehicle->category !== 'Electric Car') {
+        $isElectric = $vehicle instanceof \App\Models\ElectricCar || $vehicle?->isElectric();
+
+        if (!$vehicle || !$isElectric) {
             throw new InvalidArgumentException(
                 'Only electric vehicles can use EV charging.'
             );
@@ -72,9 +74,10 @@ class EvChargeService
             );
         }
 
-        // Calculate required energy to reach 100%
-        $energyNeeded = $batteryCapacity
-            * ((100 - $currentBattery) / 100);
+        // Calculate required energy using ElectricCar model method if available
+        $energyNeeded = $vehicle instanceof \App\Models\ElectricCar
+            ? $vehicle->calculateEnergyNeeded($currentBattery)
+            : $batteryCapacity * ((100 - $currentBattery) / 100);
 
         // Calculate charging cost
         $chargingCost = (int) round(

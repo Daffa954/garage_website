@@ -2,23 +2,35 @@
 
 namespace App\Services;
 
+use App\Models\Bike;
+use App\Models\Car;
+use App\Models\ElectricCar;
+use App\Models\MotorCycle;
 use App\Models\Vehicle;
 use Illuminate\Support\Facades\DB;
 
 class VehicleService
 {
     /**
-     * Create a new vehicle record.
+     * Create a new vehicle record using the appropriate subclass model.
      *
      * @param array $data Validated vehicle data.
      * @return Vehicle
      */
     public function create(array $data): Vehicle
     {
-        return Vehicle::create([
+        $class = match ($data['category']) {
+            'Bike' => Bike::class,
+            'Motor Cycle' => MotorCycle::class,
+            'Car' => Car::class,
+            'Electric Car' => ElectricCar::class,
+            default => Vehicle::class,
+        };
+
+        return $class::create([
             'brand' => $data['brand'],
             'license_plate' => $data['license_plate'] ?? null,
-            'total_kwh' => $data['total_kwh'] ?? null,
+            'total_kwh' => $data['category'] === 'Electric Car' ? ($data['total_kwh'] ?? null) : null,
             'image' => $data['image'] ?? null,
             'category' => $data['category'],
             'owner_id' => $data['owner_id'],
@@ -61,17 +73,16 @@ class VehicleService
     }
 
     /**
-     * Retrieve all vehicles owned by a specific user.
+     * Retrieve all vehicles owned by a specific user with pagination.
      *
      * @param int|null $userId User ID.
-     * @return \Illuminate\Database\Eloquent\Collection
+     * @param int $perPage Items per page.
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
-    public function getAllVehiclesByUserID(?int $userId)
+    public function getAllVehiclesByUserID(?int $userId, int $perPage = 10)
     {
-        if (!$userId) {
-            return collect();
-        }
-
-        return Vehicle::where('owner_id', $userId)->get();
+        return Vehicle::where('owner_id', $userId)
+            ->latest()
+            ->paginate($perPage);
     }
 }

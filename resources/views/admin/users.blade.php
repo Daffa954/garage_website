@@ -8,7 +8,7 @@
         {{-- Page Header --}}
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
             <div>
-                <h1 class="text-2xl font-bold text-gray-800">User Management & Verification</h1>
+                <h1 class="text-2xl font-bold text-green-700">User Management & Verification</h1>
                 <p class="text-sm text-gray-500 mt-1">
                     Review and manually verify user registrations.
                 </p>
@@ -17,23 +17,27 @@
 
         {{-- Stats Cards --}}
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
-            <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-                <p class="text-sm font-medium text-gray-500">Total Users</p>
-                <h2 class="text-3xl font-bold text-gray-800 mt-2">{{ $users->count() }}</h2>
-                <p class="text-xs text-gray-400 mt-1">Registered renter accounts</p>
-            </div>
+            <x-commons.card
+                title="Total Users"
+                :value="$totalUsers"
+                subtitle="Registered renter accounts"
+            />
 
-            <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-                <p class="text-sm font-medium text-emerald-600">Verified Users</p>
-                <h2 class="text-3xl font-bold text-emerald-600 mt-2">{{ $users->where('is_verified', true)->count() }}</h2>
-                <p class="text-xs text-gray-400 mt-1">Approved to book garages</p>
-            </div>
+            <x-commons.card
+                title="Verified Users"
+                title-color="text-emerald-600"
+                :value="$verifiedUsers"
+                value-color="text-emerald-600"
+                subtitle="Approved to book garages"
+            />
 
-            <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-                <p class="text-sm font-medium text-amber-600">Pending Verification</p>
-                <h2 class="text-3xl font-bold text-amber-600 mt-2">{{ $users->where('is_verified', false)->count() }}</h2>
-                <p class="text-xs text-gray-400 mt-1">Awaiting manual approval</p>
-            </div>
+            <x-commons.card
+                title="Pending Verification"
+                title-color="text-amber-600"
+                :value="$unverifiedUsers"
+                value-color="text-amber-600"
+                subtitle="Awaiting manual approval"
+            />
         </div>
 
         {{-- User List Table --}}
@@ -64,7 +68,7 @@
                         @foreach ($users as $user)
                             <tr class="hover:bg-gray-50 transition">
                                 <td class="px-6 py-4 text-gray-500">
-                                    {{ $loop->iteration }}
+                                    {{ $users->firstItem() + $loop->index }}
                                 </td>
 
                                 <td class="px-6 py-4 font-medium text-gray-900">
@@ -105,13 +109,14 @@
                                         @method('PATCH')
 
                                         @if ($user->is_verified)
-                                            <button type="submit"
-                                                onclick="return confirm('Revoke verification for {{ $user->name }}?')"
+                                            <button type="button"
+                                                onclick="confirmUserVerification(this.closest('form'), 'unverify', '{{ addslashes($user->name) }}')"
                                                 class="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition">
                                                 Unverify
                                             </button>
                                         @else
-                                            <button type="submit"
+                                            <button type="button"
+                                                onclick="confirmUserVerification(this.closest('form'), 'verify', '{{ addslashes($user->name) }}')"
                                                 class="px-3.5 py-1.5 text-xs font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-sm transition">
                                                 Verify User
                                             </button>
@@ -121,9 +126,68 @@
                             </tr>
                         @endforeach
                     </x-commons.datatable>
+
+                    @if ($users->hasPages())
+                        <div class="px-6 py-4 border-t border-gray-200">
+                            {{ $users->links() }}
+                        </div>
+                    @endif
                 </div>
             @endif
         </div>
 
     </div>
+
+    <script>
+        function confirmUserVerification(form, action, userName) {
+            const isUnverify = action === 'unverify';
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: isUnverify ? 'Revoke Verification?' : 'Verify User?',
+                    text: isUnverify
+                        ? `Are you sure you want to revoke verification for ${userName}? This user will not be able to rent garages.`
+                        : `Are you sure you want to verify ${userName}? This will permit the user to rent garages.`,
+                    icon: isUnverify ? 'warning' : 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: isUnverify ? '#dc2626' : '#059669',
+                    cancelButtonColor: '#6b7280',
+                    confirmButtonText: isUnverify ? 'Yes, Unverify' : 'Yes, Verify',
+                    cancelButtonText: 'Cancel',
+                    reverseButtons: true,
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+                });
+            } else {
+                if (confirm(isUnverify ? `Revoke verification for ${userName}?` : `Verify user ${userName}?`)) {
+                    form.submit();
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            @if (session('success'))
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: "{{ session('success') }}",
+                        timer: 3000,
+                        showConfirmButton: false,
+                    });
+                }
+            @endif
+
+            @if (session('error'))
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error!',
+                        text: "{{ session('error') }}",
+                    });
+                }
+            @endif
+        });
+    </script>
 @endsection

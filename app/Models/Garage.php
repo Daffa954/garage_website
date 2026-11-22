@@ -39,8 +39,6 @@ class Garage extends Model
 
     public function activeRent(): HasOne
     {
-        return $this->hasOne(Rent::class, 'garage_id')
-            ->whereDate('start_date', '<=', today())
-            ->whereDate('end_date', '>=', today());
+        return $this->hasOne(Rent::class, 'garage_id')->latestOfMany();
     }
 }

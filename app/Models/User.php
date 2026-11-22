@@ -25,6 +25,10 @@ use Illuminate\Notifications\Notifiable;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Vehicle> $vehicles
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Bike> $bikes
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\MotorCycle> $motorCycles
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Car> $cars
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\ElectricCar> $electricCars
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Rent> $rents
  */
 #[Fillable(['name', 'email', 'password', 'nik', 'role', 'phone'])]
@@ -50,6 +54,26 @@ class User extends Authenticatable
     public function vehicles(): HasMany
     {
         return $this->hasMany(Vehicle::class, 'owner_id');
+    }
+
+    public function bikes(): HasMany
+    {
+        return $this->hasMany(Bike::class, 'owner_id');
+    }
+
+    public function motorCycles(): HasMany
+    {
+        return $this->hasMany(MotorCycle::class, 'owner_id');
+    }
+
+    public function cars(): HasMany
+    {
+        return $this->hasMany(Car::class, 'owner_id');
+    }
+
+    public function electricCars(): HasMany
+    {
+        return $this->hasMany(ElectricCar::class, 'owner_id');
     }
 
     public function rents(): HasMany

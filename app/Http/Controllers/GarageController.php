@@ -17,25 +17,18 @@ class GarageController extends Controller
     }
 
     /**
-     * Display a listing of garages.
+     * Display a listing of all garages.
      *
      * @return \Illuminate\View\View
      */
     public function index()
     {
-        $role = session('user_role');
-
-        $query = Garage::query();
-
-        // Renters only view available garages.
-        if ($role === 'renter' || $role === 'user') {
-            $query->where('status', 'available');
-        }
-
-        $garages = $query->latest()->get();
+        $garages = Garage::with(['activeRent.renter'])->latest()->paginate(10);
 
         $vehicles = session()->has('user_id')
-            ? Vehicle::where('owner_id', session('user_id'))->get()
+            ? Vehicle::where('owner_id', session('user_id'))
+                ->whereDoesntHave('rents.garage', fn($q) => $q->where('status', '!=', 'available'))
+                ->get()
             : collect();
 
         return view('garage', compact('garages', 'vehicles'));
@@ -86,12 +79,18 @@ class GarageController extends Controller
                 ->withInput();
         }
 
-        $this->garageService->create($data);
+        try {
+            $this->garageService->create($data);
 
-        return back()->with(
-            'success',
-            'Garage created successfully.'
-        );
+            return back()->with(
+                'success',
+                'Garage created successfully.'
+            );
+        } catch (\Throwable $e) {
+            return back()
+                ->with('error', $e->getMessage())
+                ->withInput();
+        }
     }
 
 }

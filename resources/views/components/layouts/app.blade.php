@@ -36,7 +36,7 @@
             @if (session('success'))
                 Swal.fire({
                     icon: 'success',
-                    title: 'Berhasil!',
+                    title: 'Success!',
                     text: "{{ session('success') }}",
                     timer: 3000,
                     showConfirmButton: false
@@ -46,7 +46,7 @@
             @if (session('error'))
                 Swal.fire({
                     icon: 'error',
-                    title: 'Gagal!',
+                    title: 'Fail!',
                     text: "{{ session('error') }}"
                 });
             @endif
@@ -54,7 +54,7 @@
             @if ($errors->any())
                 Swal.fire({
                     icon: 'error',
-                    title: 'Validasi Gagal!',
+                    title: 'Validation Error!',
                     html: `{!! implode('<br>', $errors->all()) !!}`
                 });
             @endif

@@ -62,5 +62,6 @@ Route::prefix('api')->group(function () {
 
     Route::prefix('rent')->middleware('auth.session')->controller(RentController::class)->group(function () {
         Route::post('/', 'store')->name('api.rent.store');
+        Route::post('/{id}/extend', 'extend')->middleware('admin.only')->name('api.rent.extend');
     });
 });

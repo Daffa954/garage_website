@@ -7,14 +7,14 @@
     <header class="bg-white border-b border-gray-200">
         <nav class="max-w-7xl mx-auto px-6 lg:px-8 h-16 flex items-center justify-between">
 
-            <a class="text-xl font-bold text-indigo-600">
+            <a class="text-xl font-bold text-green-700">
                 Garage Rental
             </a>
 
             <div class="hidden md:flex items-center gap-6 text-sm font-medium">
-                <a href="{{ route('dashboard') }}" class="hover:text-indigo-600 transition">
+                {{-- <a href="{{ route('dashboard') }}" class="hover:text-indigo-600 transition">
                     Dashboard
-                </a>
+                </a> --}}
                 <a href="{{ route('garages.index') }}" class="hover:text-indigo-600 transition">
                     Garages
                 </a>

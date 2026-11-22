@@ -12,9 +12,14 @@ class UserController extends Controller
      */
     public function index()
     {
-        $users = User::where('role', 'user')->latest()->get();
+        $baseQuery = User::where('role', 'user');
+        $totalUsers = (clone $baseQuery)->count();
+        $verifiedUsers = (clone $baseQuery)->where('is_verified', true)->count();
+        $unverifiedUsers = (clone $baseQuery)->where('is_verified', false)->count();
 
-        return view('admin.users', compact('users'));
+        $users = $baseQuery->latest()->paginate(10);
+
+        return view('admin.users', compact('users', 'totalUsers', 'verifiedUsers', 'unverifiedUsers'));
     }
 
     /**

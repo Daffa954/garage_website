@@ -34,8 +34,14 @@ class VehicleController extends Controller
         ]);
 
         $data['owner_id'] = session('user_id');
-        $this->vehicleService->create($data);
-        return redirect()->back()->with('success', 'Vehicle created successfully.');
+        try {
+            $this->vehicleService->create($data);
+            return redirect()->back()->with('success', 'Vehicle created successfully.');
+        } catch (\Throwable $e) {
+            return redirect()->back()
+                ->with('error', $e->getMessage())
+                ->withInput();
+        }
     }
 
     /**

@@ -1,193 +1,138 @@
 @extends('layouts.app')
+@php
+    $role = session('user_role');
+    $isAdmin = $role === 'admin';
+    $isRenter = $role === 'user';
+@endphp
 
-@section('title', $isAdmin ? 'All Rentals - GarageApp' : 'My Rentals - GarageApp')
+@section('title', $isAdmin ? 'All Rentals & Report - GarageApp' : 'My Rentals & Report - GarageApp')
 
 @section('content')
-    <div class="max-w-7xl mx-auto px-4 py-8">
+    <div class="max-w-7xl mx-auto px-4 py-8" x-data="{
+        showDetailModal: false,
+        showExtendModal: false,
+        selectedRent: null,
+        newEndDate: '',
+        minEndDate: '',
+        get daysDifference() {
+            if (!this.selectedRent || !this.newEndDate) return 0;
+            const current = new Date((this.selectedRent.end_date || '').split('T')[0]);
+            const next = new Date(this.newEndDate);
+            const diffTime = next - current;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            return diffDays > 0 ? diffDays : 0;
+        },
+        openDetail(rent) {
+            this.selectedRent = rent;
+            this.showDetailModal = true;
+        },
+        openExtend(rent) {
+            this.selectedRent = rent;
+            const rawEnd = (rent.end_date || '').split('T')[0];
+            const currentEnd = new Date(rawEnd);
+            currentEnd.setDate(currentEnd.getDate() + 1);
+            this.minEndDate = currentEnd.toISOString().split('T')[0];
+            this.newEndDate = this.minEndDate;
+            this.showExtendModal = true;
+        },
+        formatDate(dateStr) {
+            if (!dateStr) return '-';
+            const d = new Date(dateStr.split('T')[0]);
+            return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+        },
+        formatCurrency(amount) {
+            return 'Rp ' + Number(amount || 0).toLocaleString('id-ID');
+        },
+        get evChargeTotal() {
+            if (!this.selectedRent) return 0;
+            const charges = this.selectedRent.ev_charges || this.selectedRent.evCharges || [];
+            return charges.reduce((acc, curr) => acc + Number(curr.price_charge || 0), 0);
+        },
+        get grandTotal() {
+            if (!this.selectedRent) return 0;
+            return Number(this.selectedRent.total_price || 0) + this.evChargeTotal;
+        }
+    }">
 
-        {{-- Page Header --}}
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
-            <div>
-                <h1 class="text-2xl font-bold text-gray-800">
-                    {{ $isAdmin ? 'All Rental Transactions' : 'My Rentals' }}
-                </h1>
-                <p class="text-sm text-gray-500 mt-1">
-                    {{ $isAdmin ? 'Monitor and manage all customer garage bookings.' : 'Track your active and past garage bookings.' }}
-                </p>
-            </div>
+        {{-- Page Header & Printable Header --}}
+        <x-rental.header
+            :is-admin="$isAdmin"
+            :is-filtered="$isFiltered"
+            :renters="$renters"
+        />
 
-            @if (!$isAdmin)
-                <a href="{{ route('garages.index') }}"
-                    class="inline-flex items-center justify-center px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition">
-                    <span class="mr-2 text-lg">+</span>
-                    Rent a Garage
-                </a>
-            @endif
-        </div>
+        {{-- Filter & Report Criteria Form --}}
+        <x-rental.filter-form
+            :is-admin="$isAdmin"
+            :is-filtered="$isFiltered"
+            :garage-categories="$garageCategories"
+            :renters="$renters"
+        />
 
-        {{-- Rental Stats Overview --}}
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
-            <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-                <p class="text-sm font-medium text-gray-500">
-                    {{ $isAdmin ? 'Total Bookings' : 'My Total Bookings' }}
-                </p>
-                <h2 class="text-3xl font-bold text-gray-800 mt-2">
-                    {{ $rents->count() }}
-                </h2>
-                <p class="text-xs text-gray-400 mt-1">Total recorded rental transactions</p>
-            </div>
+        {{-- Report Financial Summary Metrics --}}
+        <x-rental.report-summary
+            :report-count="$reportCount"
+            :report-total-days="$reportTotalDays"
+            :report-rental-revenue="$reportRentalRevenue"
+            :report-ev-revenue="$reportEvRevenue"
+            :report-grand-total="$reportGrandTotal"
+            :is-filtered="$isFiltered"
+        />
 
-            <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-                <p class="text-sm font-medium text-emerald-600">Active Rentals</p>
-                <h2 class="text-3xl font-bold text-emerald-600 mt-2">
-                    {{ $rents->filter(fn($r) => $r->end_date && $r->end_date >= today())->count() }}
-                </h2>
-                <p class="text-xs text-gray-400 mt-1">Currently ongoing garage leases</p>
-            </div>
+        {{-- Rental Transactions List Table --}}
+        <x-rental.rental-table
+            :rents="$rents"
+            :is-admin="$isAdmin"
+        />
 
-            <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-                <p class="text-sm font-medium text-gray-500">Completed Rentals</p>
-                <h2 class="text-3xl font-bold text-gray-700 mt-2">
-                    {{ $rents->filter(fn($r) => $r->end_date && $r->end_date < today())->count() }}
-                </h2>
-                <p class="text-xs text-gray-400 mt-1">Expired or completed leases</p>
-            </div>
-        </div>
+        {{-- Detail Modal --}}
+        <x-rental.detail-modal />
 
-        {{-- Rental Transactions List --}}
-        <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-            <div class="px-6 py-5 border-b border-gray-200 flex items-center justify-between">
-                <div>
-                    <h2 class="text-lg font-semibold text-gray-800">
-                        {{ $isAdmin ? 'All Customer Bookings' : 'My Booking History' }}
-                    </h2>
-                    <p class="text-sm text-gray-500 mt-1">
-                        Detailed breakdown of garage rental periods and payment receipts.
-                    </p>
-                </div>
-            </div>
-
-            @if ($rents->isEmpty())
-                <div class="py-16 px-6 text-center">
-                    <div class="text-gray-300 mb-4">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-14 h-14 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                        </svg>
-                    </div>
-
-                    <h3 class="text-lg font-semibold text-gray-700">No rentals found</h3>
-                    <p class="text-sm text-gray-500 mt-1">
-                        {{ $isAdmin ? 'No customer rental transactions have been recorded yet.' : "You haven't rented any garage yet." }}
-                    </p>
-
-                    @if (!$isAdmin)
-                        <a href="{{ route('garages.index') }}"
-                            class="inline-block mt-5 px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition">
-                            Browse Available Garages
-                        </a>
-                    @endif
-                </div>
-            @else
-                <div class="overflow-x-auto">
-                    <x-commons.datatable :headers="array_filter([
-                        ['label' => '#'],
-                        $isAdmin ? ['label' => 'Renter'] : null,
-                        ['label' => 'Garage'],
-                        ['label' => 'Vehicle'],
-                        ['label' => 'Rental Period'],
-                        ['label' => 'Days'],
-                        ['label' => 'Total Price'],
-                        ['label' => 'Receipt'],
-                        ['label' => 'Status', 'class' => 'text-center'],
-                    ])">
-                        @foreach ($rents as $rent)
-                            <tr class="hover:bg-gray-50 transition">
-                                <td class="px-6 py-4 text-gray-500">
-                                    {{ $loop->iteration }}
-                                </td>
-
-                                {{-- Renter Info (Admin Only) --}}
-                                @if ($isAdmin)
-                                    <td class="px-6 py-4">
-                                        <div class="font-medium text-gray-900">{{ $rent->renter?->name ?? '-' }}</div>
-                                        <div class="text-xs text-gray-500">{{ $rent->renter?->email ?? '-' }}</div>
-                                    </td>
-                                @endif
-
-                                {{-- Garage Info --}}
-                                <td class="px-6 py-4">
-                                    <div class="font-medium text-gray-900">{{ $rent->garage?->name ?? '-' }}</div>
-                                    <div class="flex items-center gap-1.5 mt-0.5">
-                                        <span class="font-mono text-xs text-indigo-600">{{ $rent->garage?->garage_code ?? '-' }}</span>
-                                        <span class="text-xs text-gray-400">&bull;</span>
-                                        <span class="text-xs text-gray-500">{{ $rent->garage?->category ?? '-' }}</span>
-                                    </div>
-                                </td>
-
-                                {{-- Vehicle Info --}}
-                                <td class="px-6 py-4">
-                                    <div class="font-medium text-gray-900">{{ $rent->vehicle?->brand ?? '-' }}</div>
-                                    <div class="text-xs text-gray-500">{{ $rent->vehicle?->license_plate ?? 'No Plate' }}</div>
-                                </td>
-
-                                {{-- Rental Period --}}
-                                <td class="px-6 py-4 text-gray-700 text-xs">
-                                    <div>{{ $rent->start_date ? $rent->start_date->format('d M Y') : '-' }}</div>
-                                    <div class="text-gray-400">to {{ $rent->end_date ? $rent->end_date->format('d M Y') : '-' }}</div>
-                                </td>
-
-                                {{-- Total Days --}}
-                                <td class="px-6 py-4 text-gray-600 font-medium">
-                                    {{ $rent->total_day }} days
-                                </td>
-
-                                {{-- Total Price --}}
-                                <td class="px-6 py-4 font-semibold text-gray-900">
-                                    Rp {{ number_format($rent->total_price, 0, ',', '.') }}
-                                    @if ($rent->evCharges->isNotEmpty())
-                                        <span class="block text-[11px] font-normal text-emerald-600 mt-0.5">
-                                            ⚡ EV Charge: Rp {{ number_format($rent->evCharges->sum('price_charge'), 0, ',', '.') }}
-                                        </span>
-                                    @endif
-                                </td>
-
-                                {{-- Payment Receipt Link --}}
-                                <td class="px-6 py-4 text-xs">
-                                    @php
-                                        $receiptUrl = $rent->payments->first()?->url_payment_receipt;
-                                    @endphp
-
-                                    @if ($receiptUrl)
-                                        <a href="{{ $receiptUrl }}" target="_blank"
-                                            class="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 font-medium hover:underline">
-                                            <span>View</span>
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                                            </svg>
-                                        </a>
-                                    @else
-                                        <span class="text-gray-400">-</span>
-                                    @endif
-                                </td>
-
-                                {{-- Status Badge --}}
-                                <td class="px-6 py-4 text-center">
-                                    @if ($rent->end_date && $rent->end_date >= today())
-                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
-                                            Active
-                                        </span>
-                                    @else
-                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700">
-                                            Completed
-                                        </span>
-                                    @endif
-                                </td>
-                            </tr>
-                        @endforeach
-                    </x-commons.datatable>
-                </div>
-            @endif
-        </div>
+        {{-- Extend Modal (Admin Only) --}}
+        @if ($isAdmin)
+            <x-rental.extend-modal />
+        @endif
 
     </div>
+
+    {{-- Print Styles --}}
+    <style>
+        @media print {
+            header, nav, footer, .no-print, [role="navigation"] {
+                display: none !important;
+            }
+            body {
+                background: #ffffff !important;
+                color: #000000 !important;
+                font-size: 11px !important;
+            }
+            .print-only {
+                display: block !important;
+            }
+            .max-w-7xl {
+                max-width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            .shadow-sm, .shadow-md, .shadow-lg, .shadow {
+                box-shadow: none !important;
+            }
+            .border, .border-b, .border-t {
+                border-color: #cbd5e1 !important;
+            }
+            table {
+                width: 100% !important;
+                border-collapse: collapse !important;
+            }
+            th, td {
+                border: 1px solid #e2e8f0 !important;
+                padding: 6px 8px !important;
+            }
+        }
+        @media screen {
+            .print-only {
+                display: none !important;
+            }
+        }
+    </style>
 @endsection
