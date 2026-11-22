@@ -78,7 +78,6 @@
                         ['label' => 'Nomor Plat'],
                         ['label' => 'Kategori'],
                         ['label' => 'Kapasitas Baterai Listrik'],
-                        ['label' => 'Status Sewa', 'class' => 'text-center'],
                     ]">
 
                         @foreach ($vehicles as $vehicle)
@@ -107,18 +106,6 @@
 
                                 <td class="px-6 py-4 text-gray-600">
                                     {{ $vehicle->total_kwh !== null ? $vehicle->total_kwh . ' kWh' : '-' }}
-                                </td>
-
-                                <td class="px-6 py-4 text-center">
-                                    @if ($vehicle->is_parked)
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">
-                                            Sedang Terparkir
-                                        </span>
-                                    @else
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
-                                            Bisa Disewakan
-                                        </span>
-                                    @endif
                                 </td>
                             </tr>
                         @endforeach

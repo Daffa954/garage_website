@@ -61,7 +61,7 @@
                         @foreach ($garages as $garage)
                             <tr class="hover:bg-gray-50 transition">
                                 <td class="px-6 py-4 text-gray-500">
-                                    {{ $garages->firstItem() + $loop->index }}
+                                    {{ $garage->id }}
                                 </td>
 
                                 <td class="px-6 py-4 font-mono font-semibold text-green-700">

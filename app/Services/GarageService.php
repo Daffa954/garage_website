@@ -19,7 +19,7 @@ class GarageService
      */
     public function getGarageIndexData(?int $userId = null, int $perPage = 10): array
     {
-        $garages = Garage::with(['activeRent.renter'])->latest()->paginate($perPage);
+        $garages = Garage::with(['activeRent.renter'])->orderBy('id', 'asc')->paginate($perPage);
 
         $vehicles = $userId
             ? Vehicle::where('owner_id', $userId)
@@ -87,24 +87,33 @@ class GarageService
             $availableSlots = Garage::MAX_GARAGE_TYPE - $currentNumber;
             $quantityToCreate = min($quantity, $availableSlots);
 
-            $createdGarages = collect();
+            $now = now();
+            $records = [];
+            $garageCodes = [];
 
             for ($i = 1; $i <= $quantityToCreate; $i++) {
                 $nextNumber = $currentNumber + $i;
                 $garageCode = $prefix . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
+                $garageCodes[] = $garageCode;
 
-                $garage = Garage::create([
+                $records[] = [
                     'garage_code' => $garageCode,
                     'price_kwh' => $data['price_kwh'] ?? null,
                     'price' => $data['price'],
                     'category' => $category,
                     'status' => 'available',
-                ]);
-
-                $createdGarages->push($garage);
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
             }
 
-            return $createdGarages;
+            // Perform single bulk insert query for all records
+            Garage::insert($records);
+
+            // Retrieve and return the created garage models
+            return Garage::whereIn('garage_code', $garageCodes)
+                ->orderBy('garage_code')
+                ->get();
         });
     }
 }

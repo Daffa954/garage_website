@@ -11,7 +11,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $brand
  * @property string|null $license_plate
  * @property float|null $total_kwh
- * @property string|null $image
  * @property string $category
  * @property int $owner_id
  * @property \Illuminate\Support\Carbon|null $created_at
@@ -25,7 +24,6 @@ class Vehicle extends Model
         'brand',
         'license_plate',
         'total_kwh',
-        'image',
         'category',
         'owner_id',
     ];

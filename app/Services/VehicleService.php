@@ -31,64 +31,22 @@ class VehicleService
             'brand' => $data['brand'],
             'license_plate' => $data['license_plate'] ?? null,
             'total_kwh' => $data['category'] === 'Electric Car' ? ($data['total_kwh'] ?? null) : null,
-            'image' => $data['image'] ?? null,
             'category' => $data['category'],
             'owner_id' => $data['owner_id'],
         ]);
     }
 
+   
     /**
-     * Update an existing vehicle record.
-     *
-     * @param int $id Target Vehicle ID.
-     * @param array $data Validated vehicle update attributes.
-     * @return Vehicle Updated vehicle instance.
-     */
-    public function update(int $id, array $data): Vehicle
-    {
-        $vehicle = Vehicle::findOrFail($id);
-
-        $vehicle->update([
-            'brand' => $data['brand'],
-            'license_plate' => $data['license_plate'] ?? null,
-            'total_kwh' => $data['total_kwh'] ?? null,
-            'image' => $data['image'] ?? null,
-            'category_id' => $data['category_id'],
-        ]);
-
-        return $vehicle;
-    }
-
-    /**
-     * Delete an existing vehicle record.
-     *
-     * @param int $id Target Vehicle ID to delete.
-     * @return bool True on successful deletion, false otherwise.
-     */
-    public function delete(int $id): bool
-    {
-        $vehicle = Vehicle::findOrFail($id);
-
-        return $vehicle->delete();
-    }
-
-    /**
-     * Retrieve all vehicles owned by a specific user with pagination and park status.
+     * Retrieve all vehicles owned by a specific user with pagination.
      *
      * @param int|null $userId Target owner User ID.
      * @param int $perPage Number of vehicle items per page.
-     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator Paginated list of owned vehicles with is_parked boolean attribute.
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator Paginated list of owned vehicles.
      */
     public function getAllVehiclesByUserID(?int $userId, int $perPage = 10)
     {
         return Vehicle::where('owner_id', $userId)
-            ->withExists([
-                'rents as is_parked' => function ($query) {
-                    $query->whereHas('garage', function ($q) {
-                        $q->where('status', '!=', 'available');
-                    });
-                }
-            ])
             ->latest()
             ->paginate($perPage);
     }

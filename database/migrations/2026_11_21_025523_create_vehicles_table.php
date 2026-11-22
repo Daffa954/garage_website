@@ -16,7 +16,6 @@ return new class extends Migration {
             $table->string('license_plate')->nullable();
             // For electric vehicles, we can store the total kWh consumed
             $table->decimal('total_kwh',5,2)->nullable();
-            $table->string('image')->nullable();
             $table->enum('category', [
                 'Bike',
                 'Motor Cycle',

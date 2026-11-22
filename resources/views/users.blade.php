@@ -118,7 +118,7 @@
                                             <button type="button"
                                                 onclick="confirmUserVerification(this.closest('form'), 'verify', '{{ addslashes($user->name) }}')"
                                                 class="px-3.5 py-1.5 text-xs font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg shadow-sm transition">
-                                                Verifikasi KTP
+                                                Verifikasi
                                             </button>
                                         @endif
                                     </form>

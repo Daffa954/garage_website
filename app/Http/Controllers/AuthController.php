@@ -82,7 +82,7 @@ class AuthController extends Controller
     {
         $data = $this->authService->getUserIndexData();
 
-        return view('admin.users', $data);
+        return view('users', $data);
     }
 
     /**

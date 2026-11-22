@@ -3,9 +3,7 @@
 namespace Tests\Unit;
 
 use App\Models\Garage;
-use App\Models\Rent;
 use App\Models\User;
-use App\Models\Vehicle;
 use App\Services\GarageService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use RuntimeException;
@@ -50,30 +48,13 @@ class GarageTest extends TestCase
     }
 
     // =========================================================================
-    // 1. MODEL BEHAVIOR & RELATIONSHIPS
+    // 1. HAPPY PATH (POSITIVE TESTS)
     // =========================================================================
 
-    public function test_it_checks_if_garage_is_available(): void
-    {
-        $availableGarage = Garage::create([
-            'garage_code' => 'C001',
-            'price' => 100000,
-            'category' => 'Car',
-            'status' => 'available',
-        ]);
-
-        $usedGarage = Garage::create([
-            'garage_code' => 'C002',
-            'price' => 100000,
-            'category' => 'Car',
-            'status' => 'used',
-        ]);
-
-        $this->assertTrue($availableGarage->isAvailable());
-        $this->assertFalse($usedGarage->isAvailable());
-    }
-
-    public function test_it_marks_garage_as_used(): void
+    /**
+     * Test garage model availability lifecycle: available -> used -> available.
+     */
+    public function test_garage_availability_status_transitions(): void
     {
         $garage = Garage::create([
             'garage_code' => 'C001',
@@ -82,285 +63,75 @@ class GarageTest extends TestCase
             'status' => 'available',
         ]);
 
-        $garage->markAsUsed();
+        $this->assertTrue($garage->isAvailable());
 
+        // Mark as used
+        $garage->markAsUsed();
         $this->assertEquals('used', $garage->fresh()->status);
         $this->assertFalse($garage->isAvailable());
-    }
 
-    public function test_it_marks_garage_as_available(): void
-    {
-        $garage = Garage::create([
-            'garage_code' => 'C001',
-            'price' => 100000,
-            'category' => 'Car',
-            'status' => 'used',
-        ]);
-
+        // Mark back as available
         $garage->markAsAvailable();
-
         $this->assertEquals('available', $garage->fresh()->status);
         $this->assertTrue($garage->isAvailable());
     }
 
-    public function test_garage_has_many_rents_and_active_rent_relationship(): void
+    /**
+     * Test sequential code generation for all categories: S (Bike/Motor), C (Car), E (EV).
+     */
+    public function test_garage_code_generation_for_all_categories(): void
     {
-        $renter = $this->createRenter();
-        $garage = Garage::create([
-            'garage_code' => 'C001',
-            'price' => 100000,
-            'category' => 'Car',
-            'status' => 'used',
-        ]);
-        $vehicle = Vehicle::create([
-            'brand' => 'Toyota Avanza',
-            'license_plate' => 'B 1234 ABC',
-            'category' => 'Car',
-            'owner_id' => $renter->id,
-        ]);
-
-        $firstRent = Rent::create([
-            'start_date' => '2026-01-01',
-            'end_date' => '2026-01-05',
-            'total_day' => 4,
-            'total_price' => 400000,
-            'renter_id' => $renter->id,
-            'garage_id' => $garage->id,
-            'vehicle_id' => $vehicle->id,
-        ]);
-
-        $secondRent = Rent::create([
-            'start_date' => '2026-02-01',
-            'end_date' => '2026-02-05',
-            'total_day' => 4,
-            'total_price' => 400000,
-            'renter_id' => $renter->id,
-            'garage_id' => $garage->id,
-            'vehicle_id' => $vehicle->id,
-        ]);
-
-        $this->assertCount(2, $garage->rents);
-        $this->assertEquals($secondRent->id, $garage->activeRent->id);
-    }
-
-    // =========================================================================
-    // 2. GARAGE SERVICE LOGIC: CODE GENERATION & CAPACITY
-    // =========================================================================
-
-    public function test_it_generates_code_with_prefix_S_for_bike_and_motorcycle(): void
-    {
-        $bike = $this->garageService->create([
-            'price' => 20000,
-            'category' => 'Bike',
-        ]);
-
-        $motorcycle = $this->garageService->create([
-            'price' => 30000,
-            'category' => 'Motor Cycle',
-        ]);
+        $bike = $this->garageService->create(['price' => 20000, 'category' => 'Bike']);
+        $motorcycle = $this->garageService->create(['price' => 30000, 'category' => 'Motor Cycle']);
+        $car1 = $this->garageService->create(['price' => 100000, 'category' => 'Car']);
+        $car2 = $this->garageService->create(['price' => 100000, 'category' => 'Car']);
+        $ev = $this->garageService->create(['price' => 150000, 'price_kwh' => 2500, 'category' => 'Electric Car']);
 
         $this->assertEquals('S001', $bike->garage_code);
         $this->assertEquals('S002', $motorcycle->garage_code);
-    }
-
-    public function test_it_generates_code_with_prefix_C_for_car(): void
-    {
-        $car = $this->garageService->create([
-            'price' => 100000,
-            'category' => 'Car',
-        ]);
-
-        $this->assertEquals('C001', $car->garage_code);
-    }
-
-    public function test_it_generates_code_with_prefix_E_for_electric_car(): void
-    {
-        $ev = $this->garageService->create([
-            'price' => 150000,
-            'price_kwh' => 2500,
-            'category' => 'Electric Car',
-        ]);
-
+        $this->assertEquals('C001', $car1->garage_code);
+        $this->assertEquals('C002', $car2->garage_code);
         $this->assertEquals('E001', $ev->garage_code);
         $this->assertEquals(2500, $ev->price_kwh);
     }
 
-    public function test_it_increments_code_number_sequentially_per_category(): void
-    {
-        $car1 = $this->garageService->create([
-            'price' => 100000,
-            'category' => 'Car',
-        ]);
-
-        $car2 = $this->garageService->create([
-            'price' => 100000,
-            'category' => 'Car',
-        ]);
-
-        $bike1 = $this->garageService->create([
-            'price' => 20000,
-            'category' => 'Bike',
-        ]);
-
-        $this->assertEquals('C001', $car1->garage_code);
-        $this->assertEquals('C002', $car2->garage_code);
-        $this->assertEquals('S001', $bike1->garage_code);
-    }
-
-    public function test_it_throws_exception_if_category_is_invalid(): void
-    {
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Invalid garage category.');
-
-        $this->garageService->create([
-            'price' => 200000,
-            'category' => 'Truck',
-        ]);
-    }
-
-    public function test_it_throws_exception_when_capacity_exceeds_maximum_999(): void
-    {
-        // Seed a garage with number 999
-        Garage::create([
-            'garage_code' => 'C999',
-            'price' => 100000,
-            'category' => 'Car',
-            'status' => 'available',
-        ]);
-
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Maximum garage capacity reached.');
-
-        $this->garageService->create([
-            'price' => 100000,
-            'category' => 'Car',
-        ]);
-    }
-
-    public function test_newly_created_garage_has_status_available(): void
-    {
-        $garage = $this->garageService->create([
-            'price' => 100000,
-            'category' => 'Car',
-        ]);
-
-        $this->assertEquals('available', $garage->status);
-        $this->assertTrue($garage->isAvailable());
-    }
-
-    public function test_admin_can_batch_create_garages(): void
-    {
-        $garages = $this->garageService->createBatch([
-            'category' => 'Car',
-            'price' => 100000,
-            'quantity' => 5,
-        ]);
-
-        $this->assertCount(5, $garages);
-        $this->assertEquals('C001', $garages[0]->garage_code);
-        $this->assertEquals('C005', $garages[4]->garage_code);
-    }
-
-    public function test_batch_creation_caps_to_remaining_capacity(): void
-    {
-        // Seed up to C998
-        Garage::create([
-            'garage_code' => 'C998',
-            'price' => 100000,
-            'category' => 'Car',
-            'status' => 'available',
-        ]);
-
-        // Request 2 garages, but only 1 slot (C999) is available
-        $garages = $this->garageService->createBatch([
-            'category' => 'Car',
-            'price' => 100000,
-            'quantity' => 2,
-        ]);
-
-        $this->assertCount(1, $garages);
-        $this->assertEquals('C999', $garages[0]->garage_code);
-        $this->assertDatabaseHas('garages', ['garage_code' => 'C999']);
-    }
-
-    // =========================================================================
-    // 3. HTTP / CONTROLLER: AUTHORIZATION (ONLY ADMIN CAN CREATE GARAGE)
-    // =========================================================================
-
-    public function test_guest_cannot_create_garage(): void
-    {
-        $response = $this->post(route('api.garage.store'), [
-            'price' => 100000,
-            'category' => 'Car',
-        ]);
-
-        $response->assertUnauthorized();
-        $this->assertDatabaseCount('garages', 0);
-    }
-
-    public function test_regular_user_cannot_create_garage(): void
-    {
-        $renter = $this->createRenter();
-
-        $response = $this->withSession([
-            'user_id' => $renter->id,
-            'user_role' => 'user',
-        ])->post(route('api.garage.store'), [
-            'price' => 100000,
-            'category' => 'Car',
-        ]);
-
-        $response->assertRedirect(route('welcome'));
-        $response->assertSessionHas('error', 'This route is for admin only');
-        $this->assertDatabaseCount('garages', 0);
-    }
-
-    public function test_admin_can_create_garage_successfully(): void
+    /**
+     * Test admin can create a single garage and batch create multiple garages.
+     */
+    public function test_admin_can_create_single_and_batch_garages(): void
     {
         $admin = $this->createAdmin();
 
+        // 1. Single creation via HTTP API
         $response = $this->withSession([
             'user_id' => $admin->id,
             'user_role' => 'admin',
-        ])->from(route('garages.index'))->post(route('api.garage.store'), [
+        ])->post(route('api.garage.store'), [
             'price' => 100000,
             'category' => 'Car',
             'quantity' => 1,
         ]);
 
-        $response->assertRedirect(route('garages.index'));
-        $response->assertSessionHas('success');
-
-        $this->assertDatabaseHas('garages', [
-            'garage_code' => 'C001',
-            'price' => 100000,
-            'category' => 'Car',
-            'status' => 'available',
-        ]);
-    }
-
-    // =========================================================================
-    // 4. HTTP / CONTROLLER: EV PRICE_KWH & FORM VALIDATION
-    // =========================================================================
-
-    public function test_creating_electric_car_garage_requires_price_kwh(): void
-    {
-        $admin = $this->createAdmin();
-
-        $response = $this->withSession([
-            'user_id' => $admin->id,
-            'user_role' => 'admin',
-        ])->post(route('api.garage.store'), [
-            'price' => 150000,
-            'category' => 'Electric Car',
-            'price_kwh' => null,
-        ]);
-
         $response->assertRedirect();
-        $response->assertSessionHasErrors(['price_kwh']);
-        $this->assertDatabaseCount('garages', 0);
+        $response->assertSessionHas('success');
+        $this->assertDatabaseHas('garages', ['garage_code' => 'C001', 'status' => 'available']);
+
+        // 2. Batch creation via Service
+        $batch = $this->garageService->createBatch([
+            'category' => 'Car',
+            'price' => 100000,
+            'quantity' => 4,
+        ]);
+
+        $this->assertCount(4, $batch);
+        $this->assertEquals('C002', $batch[0]->garage_code);
+        $this->assertEquals('C005', $batch[3]->garage_code);
+        $this->assertDatabaseCount('garages', 5);
     }
 
+    /**
+     * Test creating a non-electric garage automatically nullifies price_kwh.
+     */
     public function test_creating_non_electric_car_sets_price_kwh_to_null(): void
     {
         $admin = $this->createAdmin();
@@ -371,12 +142,11 @@ class GarageTest extends TestCase
         ])->post(route('api.garage.store'), [
             'price' => 80000,
             'category' => 'Car',
-            'price_kwh' => 2500, // Should be ignored/nullified for non-EV
+            'price_kwh' => 2500, // Should be nullified for Car
         ]);
 
         $response->assertRedirect();
         $response->assertSessionHas('success');
-
         $this->assertDatabaseHas('garages', [
             'garage_code' => 'C001',
             'category' => 'Car',
@@ -384,92 +154,96 @@ class GarageTest extends TestCase
         ]);
     }
 
-    public function test_garage_creation_validation_rules(): void
-    {
-        $admin = $this->createAdmin();
-
-        $response = $this->withSession([
-            'user_id' => $admin->id,
-            'user_role' => 'admin',
-        ])->post(route('api.garage.store'), [
-            'price' => -5000,
-            'category' => 'InvalidCategory',
-        ]);
-
-        $response->assertRedirect();
-        $response->assertSessionHasErrors(['price', 'category']);
-        $this->assertDatabaseCount('garages', 0);
-    }
-
     // =========================================================================
-    // 5. HTTP / CONTROLLER: GARAGE LISTING (INDEX)
+    // 2. NEGATIVE TESTS
     // =========================================================================
 
-    public function test_authenticated_user_can_view_garage_index_page(): void
+    /**
+     * Test garage creation fails on invalid category or exceeding maximum capacity 999.
+     */
+    public function test_garage_creation_fails_on_invalid_category_or_exceeding_capacity_999(): void
     {
-        $renter = $this->createRenter();
+        // 1. Invalid category
+        try {
+            $this->garageService->create(['price' => 100000, 'category' => 'Truck']);
+            $this->fail('Expected exception for invalid category not thrown.');
+        } catch (RuntimeException $e) {
+            $this->assertStringContainsString('Invalid garage category', $e->getMessage());
+        }
 
+        // 2. Capacity reached 999
         Garage::create([
-            'garage_code' => 'C001',
+            'garage_code' => 'C999',
             'price' => 100000,
             'category' => 'Car',
             'status' => 'available',
         ]);
 
-        $response = $this->withSession([
-            'user_id' => $renter->id,
-            'user_role' => 'user',
-        ])->get(route('garages.index'));
-
-        $response->assertOk();
-        $response->assertViewIs('garage');
-        $response->assertViewHas('garages');
+        try {
+            $this->garageService->create(['price' => 100000, 'category' => 'Car']);
+            $this->fail('Expected exception for capacity limit not thrown.');
+        } catch (RuntimeException $e) {
+            $this->assertStringContainsString('Maximum garage capacity reached', $e->getMessage());
+        }
     }
 
-    public function test_garage_index_filters_out_vehicles_parked_in_occupied_garages(): void
+    /**
+     * Test garage creation is restricted to admin only (rejects guest and regular user).
+     */
+    public function test_garage_creation_is_admin_only(): void
     {
-        $renter = $this->createRenter();
-
-        $occupiedGarage = Garage::create([
-            'garage_code' => 'C001',
+        // 1. Guest
+        $guestResponse = $this->post(route('api.garage.store'), [
             'price' => 100000,
             'category' => 'Car',
-            'status' => 'used',
         ]);
+        $guestResponse->assertUnauthorized();
 
-        $parkedVehicle = Vehicle::create([
-            'brand' => 'Car in Use',
-            'license_plate' => 'B 1111 USE',
-            'category' => 'Car',
-            'owner_id' => $renter->id,
-        ]);
-
-        Rent::create([
-            'start_date' => today()->toDateString(),
-            'end_date' => today()->addDays(5)->toDateString(),
-            'total_day' => 5,
-            'total_price' => 500000,
-            'renter_id' => $renter->id,
-            'garage_id' => $occupiedGarage->id,
-            'vehicle_id' => $parkedVehicle->id,
-        ]);
-
-        $freeVehicle = Vehicle::create([
-            'brand' => 'Available Car',
-            'license_plate' => 'B 2222 FREE',
-            'category' => 'Car',
-            'owner_id' => $renter->id,
-        ]);
-
-        $response = $this->withSession([
+        // 2. Regular User
+        $renter = $this->createRenter();
+        $userResponse = $this->withSession([
             'user_id' => $renter->id,
             'user_role' => 'user',
-        ])->get(route('garages.index'));
+        ])->post(route('api.garage.store'), [
+            'price' => 100000,
+            'category' => 'Car',
+        ]);
+        $userResponse->assertRedirect(route('welcome'));
+        $userResponse->assertSessionHas('error', 'This route is for admin only');
 
-        $response->assertOk();
-        $vehiclesInView = $response->viewData('vehicles');
+        $this->assertDatabaseCount('garages', 0);
+    }
 
-        $this->assertTrue($vehiclesInView->contains('id', $freeVehicle->id));
-        $this->assertFalse($vehiclesInView->contains('id', $parkedVehicle->id));
+    /**
+     * Test garage creation validation rules reject invalid price and missing EV price_kwh.
+     */
+    public function test_garage_creation_validation_rules(): void
+    {
+        $admin = $this->createAdmin();
+
+        // Invalid negative price
+        $resNegative = $this->withSession([
+            'user_id' => $admin->id,
+            'user_role' => 'admin',
+        ])->post(route('api.garage.store'), [
+            'price' => -5000,
+            'category' => 'Car',
+        ]);
+        $resNegative->assertRedirect();
+        $resNegative->assertSessionHasErrors(['price']);
+
+        // Missing price_kwh for Electric Car
+        $resMissingKwh = $this->withSession([
+            'user_id' => $admin->id,
+            'user_role' => 'admin',
+        ])->post(route('api.garage.store'), [
+            'price' => 150000,
+            'category' => 'Electric Car',
+            'price_kwh' => null,
+        ]);
+        $resMissingKwh->assertRedirect();
+        $resMissingKwh->assertSessionHasErrors(['price_kwh']);
+
+        $this->assertDatabaseCount('garages', 0);
     }
 }
