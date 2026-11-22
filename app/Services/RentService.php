@@ -49,10 +49,6 @@ class RentService
                 ->lockForUpdate()
                 ->findOrFail($data['garage_id']);
 
-            if (! $garage->isAvailable()) {
-                throw new RuntimeException('Garage is not available.');
-            }
-
             // 2. Parse and validate rental dates
             $startDate = Carbon::parse($data['start_date'])->startOfDay();
             $endDate = Carbon::parse($data['end_date'])->startOfDay();
@@ -60,6 +56,18 @@ class RentService
             if ($endDate->lte($startDate)) {
                 throw new InvalidArgumentException(
                     'End date must be later than start date.'
+                );
+            }
+
+            // Check if there is an overlapping rental for this garage on requested dates
+            $hasConflict = Rent::where('garage_id', $garage->id)
+                ->whereDate('start_date', '<', $endDate)
+                ->whereDate('end_date', '>', $startDate)
+                ->exists();
+
+            if ($hasConflict) {
+                throw new InvalidArgumentException(
+                    'The garage is already rented for the selected dates.'
                 );
             }
 

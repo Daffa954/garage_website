@@ -102,18 +102,11 @@
                                 </td>
 
                                 <td class="px-6 py-4 text-center">
-                                    @if ($garage->status === 'available')
-                                        <button type="button"
-                                            @click="selectedGarage = {{ json_encode($garage) }}; showRentModal = true"
-                                            class="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition">
-                                            Rent
-                                        </button>
-                                    @else
-                                        <span
-                                            class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium text-gray-400 bg-gray-50 border border-gray-200 cursor-not-allowed">
-                                            Unavailable
-                                        </span>
-                                    @endif
+                                    <button type="button"
+                                        @click="selectedGarage = {{ json_encode($garage) }}; showRentModal = true"
+                                        class="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition shadow-sm">
+                                        Rent
+                                    </button>
                                 </td>
                             </tr>
                         @endforeach

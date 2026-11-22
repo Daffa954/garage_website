@@ -784,4 +784,69 @@ class RentalTest extends TestCase
             return $rents->total() === 1 && $rents->first()->renter_id === $userA->id;
         });
     }
+
+    public function test_cannot_rent_garage_for_dates_overlapping_with_existing_rental(): void
+    {
+        $renterA = $this->createRenter(['email' => 'renter_a@example.com']);
+        $renterB = $this->createRenter(['email' => 'renter_b@example.com']);
+        $garage = $this->createGarage(['status' => 'used']);
+        $vehicleB = $this->createVehicle($renterB);
+
+        // Existing booking for renter A: May 10 - May 15
+        Rent::create([
+            'total_day' => 5,
+            'start_date' => '2026-05-10',
+            'end_date' => '2026-05-15',
+            'total_price' => 500000,
+            'renter_id' => $renterA->id,
+            'garage_id' => $garage->id,
+            'vehicle_id' => $this->createVehicle($renterA)->id,
+        ]);
+
+        $service = app(RentService::class);
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('The garage is already rented for the selected dates.');
+
+        // User B tries to book May 12 - May 18 (overlaps!)
+        $service->create([
+            'garage_id' => $garage->id,
+            'vehicle_id' => $vehicleB->id,
+            'start_date' => '2026-05-12',
+            'end_date' => '2026-05-18',
+        ], $renterB);
+    }
+
+    public function test_can_rent_currently_occupied_garage_for_future_dates_after_current_rental_ends(): void
+    {
+        $renterA = $this->createRenter(['email' => 'user_1@example.com']);
+        $renterB = $this->createRenter(['email' => 'user_2@example.com']);
+        $garage = $this->createGarage(['status' => 'used']);
+        $vehicleB = $this->createVehicle($renterB);
+
+        // Existing booking for renter A: May 10 - May 15
+        Rent::create([
+            'total_day' => 5,
+            'start_date' => '2026-05-10',
+            'end_date' => '2026-05-15',
+            'total_price' => 500000,
+            'renter_id' => $renterA->id,
+            'garage_id' => $garage->id,
+            'vehicle_id' => $this->createVehicle($renterA)->id,
+        ]);
+
+        $service = app(RentService::class);
+
+        // User B books May 15 - May 20 (immediately after rent A ends, no overlap)
+        $newRent = $service->create([
+            'garage_id' => $garage->id,
+            'vehicle_id' => $vehicleB->id,
+            'start_date' => '2026-05-15',
+            'end_date' => '2026-05-20',
+        ], $renterB);
+
+        $this->assertNotNull($newRent->id);
+        $this->assertEquals('2026-05-15', $newRent->start_date->toDateString());
+        $this->assertEquals('2026-05-20', $newRent->end_date->toDateString());
+    }
 }

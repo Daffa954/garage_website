@@ -39,7 +39,7 @@ class AuthController extends Controller
         $this->createSession($user);
 
         return redirect()
-            ->route('dashboard')
+            ->route('garages.index')
             ->with('success', 'Login Successful!');
     }
 
@@ -64,8 +64,35 @@ class AuthController extends Controller
         $this->createSession($user);
 
         return redirect()
-            ->route('dashboard')
+            ->route('garages.index')
             ->with('success', 'Registration successful!');
+    }
+
+    /**
+     * Display a listing of registered users for admin verification.
+     *
+     * @return \Illuminate\View\View
+     */
+    public function users()
+    {
+        $data = $this->authService->getUserIndexData();
+
+        return view('admin.users', $data);
+    }
+
+    /**
+     * Toggle manual verification status for a user.
+     *
+     * @param int $id
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function toggleVerify(int $id)
+    {
+        $user = $this->authService->toggleVerify($id);
+
+        $status = $user->is_verified ? 'verified' : 'unverified';
+
+        return redirect()->back()->with('success', "User {$user->name} has been successfully {$status}.");
     }
 
     /**

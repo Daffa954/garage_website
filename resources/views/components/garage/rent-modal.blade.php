@@ -20,9 +20,50 @@
                 if (v.category === 'Electric Car' && selectedGarage.category === 'Car') return true;
                 return false;
             });
+        },
+        get occupiedUntilDate() {
+            if (this.selectedGarage && this.selectedGarage.active_rent && this.selectedGarage.active_rent.end_date) {
+                const end = this.selectedGarage.active_rent.end_date.split('T')[0];
+                const today = '{{ date('Y-m-d') }}';
+                return end > today ? end : null;
+            }
+            return null;
+        },
+        get minStartDate() {
+            const today = '{{ date('Y-m-d') }}';
+            return this.occupiedUntilDate || today;
+        },
+        get minEndDate() {
+            const base = this.startDate || this.minStartDate;
+            const d = new Date(base);
+            d.setDate(d.getDate() + 1);
+            return d.toISOString().split('T')[0];
         }
     }"
-    x-init="$watch('selectedGarage', () => { selectedVehicleId = ''; })"
+    x-init="
+        $watch('selectedGarage', (garage) => {
+            selectedVehicleId = '';
+            const today = '{{ date('Y-m-d') }}';
+            let nextStart = today;
+            if (garage && garage.active_rent && garage.active_rent.end_date) {
+                const occupiedEnd = garage.active_rent.end_date.split('T')[0];
+                if (occupiedEnd > today) {
+                    nextStart = occupiedEnd;
+                }
+            }
+            startDate = nextStart;
+            const nextDay = new Date(nextStart);
+            nextDay.setDate(nextDay.getDate() + 1);
+            endDate = nextDay.toISOString().split('T')[0];
+        });
+        $watch('startDate', (val) => {
+            if (val && endDate <= val) {
+                const nextDay = new Date(val);
+                nextDay.setDate(nextDay.getDate() + 1);
+                endDate = nextDay.toISOString().split('T')[0];
+            }
+        });
+    "
     x-show="showRentModal"
     x-cloak
     x-transition.opacity
@@ -80,6 +121,21 @@
                 </template>
             </div>
 
+            {{-- Occupied Notice Banner --}}
+            <template x-if="occupiedUntilDate">
+                <div class="mb-5 p-3.5 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800 flex items-start gap-2.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-amber-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <div>
+                        <div class="font-semibold text-amber-900">Garasi sedang dipinjam saat ini</div>
+                        <div class="mt-0.5">
+                            Garasi ini sedang disewa sampai <strong x-text="new Date(occupiedUntilDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })"></strong>. Tanggal sewa sebelum tanggal tersebut tidak dapat dipilih.
+                        </div>
+                    </div>
+                </div>
+            </template>
+
             {{-- Vehicle Selection (Filtered by Garage Category) --}}
             <div class="mb-5">
                 <label for="vehicle_id" class="block text-sm font-medium text-gray-700 mb-2">
@@ -126,7 +182,7 @@
                         name="start_date"
                         id="start_date"
                         x-model="startDate"
-                        min="{{ date('Y-m-d') }}"
+                        :min="minStartDate"
                         required
                         class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition"
                     >
@@ -144,7 +200,7 @@
                         name="end_date"
                         id="end_date"
                         x-model="endDate"
-                        :min="startDate"
+                        :min="minEndDate"
                         required
                         class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition"
                     >
