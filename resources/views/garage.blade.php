@@ -21,7 +21,7 @@
 
             @if ($isAdmin)
                 <button type="button" @click="showCreateModal = true"
-                    class="inline-flex items-center justify-center px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition">
+                    class="inline-flex items-center justify-center px-4 py-2.5 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition">
                     <span class="mr-2 text-lg">+</span>
                     Add Garage
                 </button>
@@ -35,8 +35,8 @@
             </div>
         @else
             {{-- Garage Content --}}
-            <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-                <div class="px-6 py-4 border-b border-gray-200">
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden px-6 py-3">
+                <div class="px-6 py-4">
                     <h2 class="font-semibold text-gray-800">
                         {{ $isAdmin ? 'Garage List' : 'All Garages' }}
                     </h2>
@@ -105,7 +105,7 @@
                                     @if ($garage->status === 'available')
                                         <button type="button"
                                             @click="selectedGarage = {{ json_encode($garage) }}; showRentModal = true"
-                                            class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition">
+                                            class="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition">
                                             Rent
                                         </button>
                                     @else

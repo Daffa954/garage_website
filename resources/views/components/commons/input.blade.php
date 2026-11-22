@@ -27,7 +27,7 @@
             'class' => 'w-full rounded-lg border border-gray-300
                         bg-white px-4 py-3 text-sm
                         text-gray-900 outline-none
-                        focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20
+                        focus:border-green-500 focus:ring-2 focus:ring-green-500/20
                         transition',
         ]) }}
     >

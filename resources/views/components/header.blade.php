@@ -12,30 +12,30 @@
             </a>
 
             <div class="hidden md:flex items-center gap-6 text-sm font-medium">
-                {{-- <a href="{{ route('dashboard') }}" class="hover:text-indigo-600 transition">
+                {{-- <a href="{{ route('dashboard') }}" class="hover:text-green-600 transition">
                     Dashboard
                 </a> --}}
-                <a href="{{ route('garages.index') }}" class="hover:text-indigo-600 transition">
+                <a href="{{ route('garages.index') }}" class="hover:text-green-600 transition">
                     Garages
                 </a>
                 @if ($isRenter)
-                    <a href="{{ route('vehicles.index') }}" class="hover:text-indigo-600 transition">
+                    <a href="{{ route('vehicles.index') }}" class="hover:text-green-600 transition">
                         My Vehicles
                     </a>
                 @endif
 
                 @if ($isAdmin)
-                    <a href="{{ route('admin.users.index') }}" class="hover:text-indigo-600 transition">
+                    <a href="{{ route('admin.users.index') }}" class="hover:text-green-600 transition">
                         List Users
                     </a>
                 @endif
 
                 @if ($isRenter)
-                    <a href="{{ route('rents.index') }}" class="hover:text-indigo-600 transition">
+                    <a href="{{ route('rents.index') }}" class="hover:text-green-600 transition">
                         My Rental
                     </a>
                 @else
-                    <a href="{{ route('rents.index') }}" class="hover:text-indigo-600 transition">
+                    <a href="{{ route('rents.index') }}" class="hover:text-green-600 transition">
                         List Rentals
                     </a>
                 @endif

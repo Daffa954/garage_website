@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             VehicleSeeder::class,
             GarageSeeder::class,
+            RentSeeder::class,
         ]);
     }
 }

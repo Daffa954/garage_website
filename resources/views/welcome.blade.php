@@ -34,7 +34,7 @@
                     <div class="flex items-center justify-between mb-6">
                         <label class="flex items-center gap-2 text-sm text-gray-600">
                             <input type="checkbox" name="remember"
-                                class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                class="rounded border-gray-300 text-green-600 focus:ring-green-500">
                             Remember me
                         </label>
 
@@ -42,7 +42,7 @@
                     </div>
 
                     <button type="submit"
-                        class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 rounded-lg transition">
+                        class="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 rounded-lg transition">
                         Login
                     </button>
                 </form>
@@ -51,7 +51,7 @@
                     Don't have an account?
 
                     <button type="button" @click="activeForm = 'register'"
-                        class="text-indigo-600 hover:text-indigo-700 font-semibold">
+                        class="text-green-600 hover:text-green-700 font-semibold">
                         Register
                     </button>
                 </p>
@@ -83,7 +83,7 @@
                         placeholder="Confirm your password" />
 
                     <button type="submit"
-                        class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 rounded-lg transition">
+                        class="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 rounded-lg transition">
                         Create Account
                     </button>
                 </form>
@@ -92,7 +92,7 @@
                     Already have an account?
 
                     <button type="button" @click="activeForm = 'login'"
-                        class="text-indigo-600 hover:text-indigo-700 font-semibold">
+                        class="text-green-600 hover:text-green-700 font-semibold">
                         Login
                     </button>
                 </p>

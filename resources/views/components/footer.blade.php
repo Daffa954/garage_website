@@ -7,11 +7,11 @@
         </p>
 
         <div class="flex items-center gap-5 text-sm text-gray-500">
-            <a href="#" class="hover:text-indigo-600 transition">
+            <a href="#" class="hover:text-green-600 transition">
                 About
             </a>
 
-            <a href="#" class="hover:text-indigo-600 transition">
+            <a href="#" class="hover:text-green-600 transition">
                 Contact
             </a>
         </div>

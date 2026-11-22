@@ -25,9 +25,9 @@
 
             <x-commons.card
                 title="Verified Users"
-                title-color="text-emerald-600"
+                title-color="text-green-600"
                 :value="$verifiedUsers"
-                value-color="text-emerald-600"
+                value-color="text-green-600"
                 subtitle="Approved to book garages"
             />
 
@@ -117,7 +117,7 @@
                                         @else
                                             <button type="button"
                                                 onclick="confirmUserVerification(this.closest('form'), 'verify', '{{ addslashes($user->name) }}')"
-                                                class="px-3.5 py-1.5 text-xs font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-sm transition">
+                                                class="px-3.5 py-1.5 text-xs font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg shadow-sm transition">
                                                 Verify User
                                             </button>
                                         @endif

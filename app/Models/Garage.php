@@ -41,4 +41,19 @@ class Garage extends Model
     {
         return $this->hasOne(Rent::class, 'garage_id')->latestOfMany();
     }
+
+    public function isAvailable(): bool
+    {
+        return $this->status === 'available';
+    }
+
+    public function markAsUsed(): void
+    {
+        $this->update(['status' => 'used']);
+    }
+
+    public function markAsAvailable(): void
+    {
+        $this->update(['status' => 'available']);
+    }
 }

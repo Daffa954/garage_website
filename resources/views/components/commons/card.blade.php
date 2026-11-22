@@ -3,7 +3,7 @@
     'value' => null,
     'subtitle' => null,
     'icon' => null,
-    'iconClass' => 'bg-blue-50 text-blue-600',
+    'iconClass' => 'bg-green-50 text-green-600',
     'titleColor' => null,
     'valueColor' => null,
     'subtitleColor' => null,

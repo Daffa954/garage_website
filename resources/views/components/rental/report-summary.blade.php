@@ -24,9 +24,9 @@
     {{-- Metric 2: Total Garage Rental Income --}}
     <x-commons.card
         title="Rental Income"
-        title-color="text-blue-600"
+        title-color="text-green-600"
         :value="'Rp ' . number_format($reportRentalRevenue, 0, ',', '.')"
-        value-color="text-blue-700"
+        value-color="text-green-700"
         subtitle="Garage base rental revenue"
     />
 

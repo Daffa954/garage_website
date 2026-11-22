@@ -31,7 +31,7 @@ use Illuminate\Notifications\Notifiable;
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\ElectricCar> $electricCars
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Rent> $rents
  */
-#[Fillable(['name', 'email', 'password', 'nik', 'role', 'phone'])]
+#[Fillable(['name', 'email', 'password', 'nik', 'role', 'phone', 'is_verified'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -48,6 +48,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_verified' => 'boolean',
         ];
     }
 

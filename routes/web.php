@@ -52,7 +52,7 @@ Route::prefix('api')->group(function () {
         Route::post('/', 'store')->name('api.vehicle.store');
     });
 
-    Route::prefix('garage')->controller(GarageController::class)->group(function () {
+    Route::prefix('garage')->middleware(['auth.session', 'admin.only'])->controller(GarageController::class)->group(function () {
         Route::post('/', 'store')->name('api.garage.store');
     });
 
@@ -61,7 +61,7 @@ Route::prefix('api')->group(function () {
     });
 
     Route::prefix('rent')->middleware('auth.session')->controller(RentController::class)->group(function () {
-        Route::post('/', 'store')->name('api.rent.store');
+        Route::post('/', 'store')->middleware('verified.user')->name('api.rent.store');
         Route::post('/{id}/extend', 'extend')->middleware('admin.only')->name('api.rent.extend');
     });
 });

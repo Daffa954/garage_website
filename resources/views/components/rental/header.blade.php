@@ -18,7 +18,7 @@
     <div class="flex items-center gap-2 no-print">
         @if (!$isAdmin)
             <a href="{{ route('garages.index') }}"
-                class="inline-flex items-center justify-center px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition shadow-sm">
+                class="inline-flex items-center justify-center px-4 py-2.5 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition shadow-sm">
                 <span class="mr-1.5 text-lg leading-none">+</span>
                 Rent a Garage
             </a>

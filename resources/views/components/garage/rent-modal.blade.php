@@ -42,7 +42,7 @@
                     Rent Garage
                 </h2>
                 <p class="text-sm text-gray-500 mt-1">
-                    Book <span class="font-medium text-gray-700" x-text="selectedGarage ? selectedGarage.name : ''"></span> (<span class="font-mono text-xs text-indigo-600" x-text="selectedGarage ? selectedGarage.garage_code : ''"></span>)
+                    Book <span class="font-medium text-gray-700" x-text="selectedGarage ? selectedGarage.name : ''"></span> (<span class="font-mono text-xs text-green-600" x-text="selectedGarage ? selectedGarage.garage_code : ''"></span>)
                 </p>
             </div>
 
@@ -70,7 +70,7 @@
                 </div>
                 <div class="flex justify-between items-center mb-2">
                     <span class="text-gray-500">Daily Rate:</span>
-                    <span class="font-semibold text-blue-600" x-text="selectedGarage ? 'Rp ' + Number(selectedGarage.price).toLocaleString('id-ID') : '-'"></span>
+                    <span class="font-semibold text-green-600" x-text="selectedGarage ? 'Rp ' + Number(selectedGarage.price).toLocaleString('id-ID') : '-'"></span>
                 </div>
                 <template x-if="isElectric && selectedGarage?.price_kwh">
                     <div class="flex justify-between items-center">
@@ -83,7 +83,7 @@
             {{-- Vehicle Selection (Filtered by Garage Category) --}}
             <div class="mb-5">
                 <label for="vehicle_id" class="block text-sm font-medium text-gray-700 mb-2">
-                    Select Your Vehicle (<span class="text-indigo-600 font-semibold" x-text="selectedGarage ? selectedGarage.category : ''"></span>)
+                    Select Your Vehicle (<span class="text-green-600 font-semibold" x-text="selectedGarage ? selectedGarage.category : ''"></span>)
                 </label>
 
                 {{-- Alert when user has no matching vehicles for the selected garage category --}}
@@ -101,7 +101,7 @@
                         id="vehicle_id"
                         x-model="selectedVehicleId"
                         ::required="matchingVehicles.length > 0"
-                        class="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition"
+                        class="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition"
                     >
                         <option value="">-- Choose Vehicle --</option>
                         <template x-for="v in matchingVehicles" :key="v.id">
@@ -128,7 +128,7 @@
                         x-model="startDate"
                         min="{{ date('Y-m-d') }}"
                         required
-                        class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition"
+                        class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition"
                     >
                     @error('start_date')
                         <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
@@ -146,7 +146,7 @@
                         x-model="endDate"
                         :min="startDate"
                         required
-                        class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition"
+                        class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition"
                     >
                     @error('end_date')
                         <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
@@ -211,7 +211,7 @@
                     id="payment_receipt"
                     accept="image/*,.pdf"
                     required
-                    class="w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition border border-gray-300 rounded-lg p-1.5"
+                    class="w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100 transition border border-gray-300 rounded-lg p-1.5"
                 >
                 @error('payment_receipt')
                     <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
@@ -228,7 +228,7 @@
                     id="rent_note"
                     rows="2"
                     placeholder="Any special request or note..."
-                    class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition"
+                    class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition"
                 ></textarea>
                 @error('note')
                     <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
@@ -248,7 +248,7 @@
                 <button
                     type="submit"
                     :disabled="matchingVehicles.length === 0"
-                    class="px-5 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                    class="px-5 py-2.5 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
                 >
                     Confirm & Rent
                 </button>

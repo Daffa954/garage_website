@@ -52,7 +52,7 @@
                 </div>
                 <div class="flex justify-between items-center">
                     <span class="text-gray-500">Current End Date:</span>
-                    <span class="font-semibold text-indigo-600" x-text="formatDate(selectedRent?.end_date)"></span>
+                    <span class="font-semibold text-green-600" x-text="formatDate(selectedRent?.end_date)"></span>
                 </div>
                 <div class="flex justify-between items-center pt-2 border-t border-gray-200">
                     <span class="text-gray-500">Daily Rate:</span>
@@ -72,11 +72,11 @@
                     x-model="newEndDate"
                     :min="minEndDate"
                     required
-                    class="w-full rounded-lg p-2 border-[0.5px] border-gray-500 bg-white px-4 py-3 text-sm text-gray-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition"
+                    class="w-full rounded-lg p-2 border-[0.5px] border-gray-500 bg-white px-4 py-3 text-sm text-gray-900 outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition"
                 >
                 <div class="mt-2 text-xs flex items-center justify-between">
                     <span class="text-gray-500">
-                        Additional Days: <strong class="text-indigo-600" x-text="daysDifference + ' days'"></strong>
+                        Additional Days: <strong class="text-green-600" x-text="daysDifference + ' days'"></strong>
                     </span>
                     <span class="text-gray-400">
                         Must be later than current end date
@@ -97,7 +97,7 @@
                     name="payment_receipt"
                     id="extend_payment_receipt"
                     accept="image/png,image/jpeg,image/jpg,application/pdf"
-                    class="w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 transition"
+                    class="w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100 transition"
                 >
                 <p class="text-xs text-gray-400 mt-1">Accepted formats: JPG, PNG, PDF (Max 2MB)</p>
                 @error('payment_receipt')
@@ -115,7 +115,7 @@
                     id="extend_note"
                     rows="3"
                     placeholder="e.g. Extended upon renter request."
-                    class="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition resize-none"
+                    class="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition resize-none"
                 ></textarea>
                 @error('note')
                     <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
@@ -135,7 +135,7 @@
                 <button
                     type="submit"
                     :disabled="daysDifference <= 0"
-                    class="px-5 py-2.5 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                    class="px-5 py-2.5 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
                 >
                     Confirm Extension
                 </button>

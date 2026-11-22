@@ -36,13 +36,13 @@
 
             @if (!$isAdmin)
                 <a href="{{ route('garages.index') }}"
-                    class="inline-block mt-5 px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition">
+                    class="inline-block mt-5 px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition">
                     Browse Available Garages
                 </a>
             @endif
         </div>
     @else
-        <div class="overflow-x-auto">
+        <div class="overflow-x-auto py-3 px-6">
             <x-commons.datatable :headers="array_filter([
                 ['label' => '#'],
                 $isAdmin ? ['label' => 'Renter'] : null,
@@ -76,7 +76,7 @@
                             <div class="font-medium text-gray-900">{{ $rent->garage?->name ?? '-' }}</div>
                             <div class="flex items-center gap-1.5 mt-0.5">
                                 <span
-                                    class="font-mono text-xs text-indigo-600">{{ $rent->garage?->garage_code ?? '-' }}</span>
+                                    class="font-mono text-xs text-green-700">{{ $rent->garage?->garage_code ?? '-' }}</span>
                                 <span class="text-xs text-gray-400">&bull;</span>
                                 <span class="text-xs text-gray-500">{{ $rent->garage?->category ?? '-' }}</span>
                             </div>
@@ -105,7 +105,7 @@
                             @endphp
                             @if ($extensionCount > 0)
                                 <span
-                                    class="inline-flex items-center px-1.5 py-0.5 mt-0.5 rounded text-[10px] font-medium bg-indigo-50 text-indigo-700 border border-indigo-100">
+                                    class="inline-flex items-center px-1.5 py-0.5 mt-0.5 rounded text-[10px] font-medium bg-green-50 text-green-700 border border-green-200">
                                     +{{ $extensionCount }} extension{{ $extensionCount > 1 ? 's' : '' }}
                                 </span>
                             @endif
@@ -134,7 +134,7 @@
                             <div class="flex flex-col gap-1">
                                 @if ($receiptUrl)
                                     <a href="{{ $receiptUrl }}" target="_blank" @click.stop
-                                        class="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 font-medium hover:underline">
+                                        class="inline-flex items-center gap-1 text-green-600 hover:text-green-800 font-medium hover:underline">
                                         <span>Rent Receipt</span>
                                         <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none"
                                             viewBox="0 0 24 24" stroke="currentColor">
@@ -188,7 +188,7 @@
 
                                 @if ($isAdmin && $rent->end_date && $rent->end_date >= today())
                                     <button type="button" @click="openExtend({{ json_encode($rent) }})"
-                                        class="inline-flex items-center px-2.5 py-1.5 bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-600 hover:text-white text-xs font-semibold rounded-lg transition"
+                                        class="inline-flex items-center px-2.5 py-1.5 bg-green-50 border border-green-200 text-green-700 hover:bg-green-600 hover:text-white text-xs font-semibold rounded-lg transition"
                                         title="Extend this rental contract">
                                         Extend
                                     </button>

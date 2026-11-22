@@ -48,7 +48,7 @@ class RentService
                 ->lockForUpdate()
                 ->findOrFail($data['garage_id']);
 
-            if ($garage->status !== 'available') {
+            if (! $garage->isAvailable()) {
                 throw new RuntimeException('Garage is not available.');
             }
 
@@ -62,30 +62,23 @@ class RentService
                 );
             }
 
-            // 3. Calculate rental periods
-            $periods = $this->calculatePeriods(
-                $startDate,
-                $endDate,
-                $garage->price
-            );
-
-            $totalDay = (int) $startDate->diffInDays($endDate);
-
-            $totalPrice = array_sum(
-                array_column($periods, 'total_price')
-            );
-
-            // 4. Create main rent transaction
-            $rent = Rent::create([
+            // 3. Instantiate Rent model and calculate periods via model domain behavior
+            $rent = new Rent([
                 'start_date' => $startDate->toDateString(),
                 'end_date' => $endDate->toDateString(),
-                'total_day' => $totalDay,
-                'total_price' => $totalPrice,
                 'note' => $data['note'] ?? null,
                 'renter_id' => $renter->id,
                 'garage_id' => $garage->id,
                 'vehicle_id' => $data['vehicle_id'],
             ]);
+
+            $periods = $rent->calculatePeriods($garage->price);
+
+            $rent->total_day = (int) $startDate->diffInDays($endDate);
+            $rent->total_price = array_sum(
+                array_column($periods, 'total_price')
+            );
+            $rent->save();
 
             // 5. Create rental period details
             foreach ($periods as $period) {
@@ -115,9 +108,7 @@ class RentService
             }
 
             // 8. Update garage status
-            $garage->update([
-                'status' => 'used',
-            ]);
+            $garage->markAsUsed();
 
             return $rent;
         });
@@ -148,9 +139,21 @@ class RentService
                 );
             }
 
-            // Calculate extension periods using the same daily & monthly pricing rules
-            $periods = $this->calculatePeriods(
-                $currentEndDate,
+            // Directly reject extension if another booking already exists for this garage in the requested date range
+            $hasConflict = Rent::where('garage_id', $rent->garage_id)
+                ->where('id', '!=', $rent->id)
+                ->where('start_date', '<', $newEndDate->toDateString())
+                ->where('end_date', '>', $currentEndDate->toDateString())
+                ->exists();
+
+            if ($hasConflict) {
+                throw new InvalidArgumentException(
+                    'Cannot extend rental: The garage is already booked by another reservation for the selected dates.'
+                );
+            }
+
+            // Calculate extension periods using Rent model domain behavior
+            $periods = $rent->calculateExtensionPeriods(
                 $newEndDate,
                 $rent->garage->price
             );
@@ -182,9 +185,7 @@ class RentService
             ]);
 
             // Ensure garage status remains occupied
-            $rent->garage->update([
-                'status' => 'used',
-            ]);
+            $rent->garage->markAsUsed();
 
             return $rent->fresh(['rentDetails', 'payments', 'garage', 'vehicle', 'renter']);
         });
@@ -192,6 +193,7 @@ class RentService
 
     /**
      * Calculate rental periods based on daily and monthly pricing rules.
+     * Delegates to the Rent model domain behavior.
      *
      * A one-month calculation always follows the number of days in the month where the booking started.
      * - Monthly price = 25 * daily garage price.
@@ -207,39 +209,11 @@ class RentService
         Carbon $endDate,
         int|float $dailyPrice
     ): array {
-        $periods = [];
+        $rent = new Rent([
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+        ]);
 
-        $remainingDays = (int) $startDate->diffInDays($endDate);
-        $currentStartDate = $startDate->copy();
-
-        $daysInStartingMonth = $startDate->daysInMonth;
-        $dailyMax = $daysInStartingMonth - 1;
-
-        while ($remainingDays > 0) {
-            if ($remainingDays > $dailyMax) {
-                $type = 'monthly';
-                $periodDays = $daysInStartingMonth;
-                $totalPrice = 25 * $dailyPrice;
-            } else {
-                $type = 'daily';
-                $periodDays = $remainingDays;
-                $totalPrice = $dailyPrice * $periodDays;
-            }
-
-            $currentEndDate = $currentStartDate->copy()->addDays($periodDays);
-
-            $periods[] = [
-                'type' => $type,
-                'start_date' => $currentStartDate->toDateString(),
-                'end_date' => $currentEndDate->toDateString(),
-                'total_day' => $periodDays,
-                'total_price' => $totalPrice,
-            ];
-
-            $remainingDays -= $periodDays;
-            $currentStartDate = $currentEndDate;
-        }
-
-        return $periods;
+        return $rent->calculatePeriods($dailyPrice);
     }
 }
